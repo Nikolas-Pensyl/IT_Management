@@ -1,5 +1,7 @@
 #include "startwidget.h"
+// include OS
 
+//Run winbdoiwremnote.exe
 StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     QTabWidget* tab;
     tab = new QTabWidget(this);
