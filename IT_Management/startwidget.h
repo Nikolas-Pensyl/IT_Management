@@ -3,7 +3,16 @@
 
 #include <QWidget>
 #include <QTabWidget>
+#include <iostream>
+#include <stdexcept>
+#include <stdio.h>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <QPushButton>
+#include <QHBoxLayout>
 
+using namespace std;
 class StartWidget : public QWidget
 {
     Q_OBJECT
@@ -11,9 +20,19 @@ class StartWidget : public QWidget
 public:
     StartWidget(QWidget *parent = nullptr);
     ~StartWidget();
+    string exec(string command);
+    vector<string> ScanLAN();
+    vector<QPushButton*> comps;
+    vector<QHBoxLayout*> myHLayouts;
+    QVBoxLayout *fullLayout;
+
 private:
     QTabWidget* IPlist_widget;
     QTabWidget* login_widget;
     QTabWidget* settings_widget;
+    vector<string> LAN;
+
+public slots:
+    void execut();
 };
 #endif // STARTWIDGET_H
