@@ -14,6 +14,7 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     LAN = ScanLAN();
     myHLayouts.push_back(new QHBoxLayout);
     fullLayout = new QVBoxLayout;
+    QSignalMapper* signalMapper = new QSignalMapper (this) ;
     int i = 0, num =0;
     for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++, i++) {
         if(i%5==0 && i!=0) {
@@ -23,9 +24,13 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
         }
        QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), login_widget);
        comps.push_back(labelbed);
-       connect(comps[i],SIGNAL(clicked()),this,SLOT(execut()));
+       connect(comps[i],SIGNAL(clicked()),signalMapper,SLOT(map()));
+       signalMapper->setMapping(comps[i], QString::fromStdString(*lss));
+
+
        myHLayouts[num]->addWidget(comps[i]);
     }
+    connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
     fullLayout->addLayout(myHLayouts[num]);
     login_widget->setLayout(fullLayout);
     IPlist_widget->setStyleSheet("background-color:blue;");
@@ -39,9 +44,9 @@ StartWidget::~StartWidget()
 {
 }
 
-void StartWidget::execut() {
-     cout << "test"<<endl;
-    cout << exec("ping 127.0.0.1");
+void StartWidget::execut(QString cmd) {
+    string com = cmd.toStdString();
+    cout << exec("ping "+com);
 }
 
 string StartWidget::exec(string command) {

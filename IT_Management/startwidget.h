@@ -11,6 +11,7 @@
 #include <vector>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QSignalMapper>
 
 using namespace std;
 class StartWidget : public QWidget
@@ -33,6 +34,6 @@ private:
     vector<string> LAN;
 
 public slots:
-    void execut();
+    void execut(QString cmd);
 };
 #endif // STARTWIDGET_H
