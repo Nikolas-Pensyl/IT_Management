@@ -4,14 +4,18 @@
 //Run winbdoiwremnote.exe
 using namespace std;
 StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
+    //Create tabs
     QTabWidget* tab;
     tab = new QTabWidget(this);
     IPlist_widget = new QTabWidget;
-    IPlist_widget->setStyleSheet("background-color:black;");
     settings_widget = new QTabWidget;
     settings_widget->setStyleSheet("background-color:red;");
     login_widget = new QTabWidget;
+    login_widget->setStyleSheet("background-color:blue;");
+
+    //Scan LAN
     LAN = ScanLAN();
+    //Set buttons for IPs scanned on LAN
     myHLayouts.push_back(new QHBoxLayout);
     fullLayout = new QVBoxLayout;
     QSignalMapper* signalMapper = new QSignalMapper (this) ;
@@ -22,7 +26,7 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
             num ++;
             myHLayouts.push_back(new QHBoxLayout);
         }
-       QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), login_widget);
+       QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget);
        comps.push_back(labelbed);
        connect(comps[i],SIGNAL(clicked()),signalMapper,SLOT(map()));
        signalMapper->setMapping(comps[i], QString::fromStdString(*lss));
@@ -32,11 +36,13 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     }
     connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
     fullLayout->addLayout(myHLayouts[num]);
-    login_widget->setLayout(fullLayout);
-    IPlist_widget->setStyleSheet("background-color:blue;");
-    tab->addTab(IPlist_widget, "Computers by IP");
+    IPlist_widget->setLayout(fullLayout);
+
+    //Set the tabs to the Screen
+
     tab->addTab(settings_widget, "Settings");
     tab->addTab(login_widget, "login");
+    tab->addTab(IPlist_widget, "Computers by IP");
     tab->setFixedSize(700, 500);
 }
 
@@ -49,6 +55,8 @@ void StartWidget::execut(QString cmd) {
     cout << exec("ping "+com);
 }
 
+//Send the command to the command line and return its output
+//for a multi-command do && between commands for two commands
 string StartWidget::exec(string command) {
     char buffer[128];
     string result = "";
@@ -76,6 +84,8 @@ vector<string> StartWidget::ScanLAN() {
    string ts = exec("arp -a");
 
    cout << ts;
+
+   //This parses the output string to only get the IPs of the output
    std::vector<string> ls;
    std::istringstream f(ts);
       std::string line;
