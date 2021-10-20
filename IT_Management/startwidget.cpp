@@ -3,13 +3,12 @@
 
 //Run winbdoiwremnote.exe
 using namespace std;
-using namespace std::experimental::filesystem;
 
 StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     //Create tabs
-    QTabWidget* tab;
+
     tab = new QTabWidget(this);
-    IPlist_widget = new QTabWidget;
+    IPlist_widget.push_back(new QTabWidget);
     settings_widget = new QTabWidget;
     login_widget = new QTabWidget;
 
@@ -18,9 +17,9 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     //Set the tabs to the Screen
     login();
     CompsbyIP();
-    tab->addTab(IPlist_widget, "Computers");
-    tab->addTab(settings_widget, "Settings");
-    //tab->addTab(login_widget, "login");
+    //tab->addTab(IPlist_widget, "Computers");
+    //tab->addTab(settings_widget, "Settings");
+    tab->addTab(login_widget, "login");
     tab->setFixedSize(700, 500);
 }
 
@@ -32,69 +31,80 @@ void StartWidget::CompsbyIP() {
     //Scan LAN
     LAN = ScanLAN();
     //Set buttons for IPs scanned on LAN
-    fullLayout = new QVBoxLayout;
-    QHBoxLayout *labs = new QHBoxLayout();
-    QLabel *label = new QLabel(IPlist_widget);
-    label->setText("When a button is clicked, run command this command: ");
-    labs->addWidget(label);
-    labs->addSpacing(10);
     myHLayouts.push_back(new QHBoxLayout);
-    QComboBox *comm = new QComboBox(IPlist_widget);
-    comm->addItems(commands);
-    labs->addWidget(comm);
-    labs->addSpacing(10);
-    QPushButton *butt_all = new QPushButton();
-    butt_all->setText("Run command for all");
-    labs->addWidget(butt_all);
-
-
-    QSignalMapper* sigMapper = new QSignalMapper (this) ;
-    connect(butt_all, SIGNAL(clicked()), sigMapper, SLOT(map()));
-    sigMapper->setMapping(butt_all, comm->currentText());
-    connect(sigMapper, SIGNAL(mapped(QString)), this, SLOT(runAll(QString)));
-
-    fullLayout->addLayout(labs);
-    QSignalMapper* signalMapper = new QSignalMapper (this) ;
-    int i = 0, num =0;
-    for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++, i++) {
-        if(i%5==0 && i!=0) {
-            fullLayout->addLayout(myHLayouts[num]);
-            num ++;
+    total_layout.push_back(new QVBoxLayout());
+     QSignalMapper* signalMapper = new QSignalMapper (this) ;
+    int k = 0, tabb = 0, numm = 0;
+    for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++, k++) {
+        if(k%30==0) {
+          if(k!=0) {
+              total_layout[tabb]->addLayout(myHLayouts[numm]);
+              numm ++;
+              myHLayouts.push_back(new QHBoxLayout);
+             tabb++;
+             IPlist_widget.push_back(new QTabWidget);
+             total_layout.push_back(new QVBoxLayout);
+          }
+          QHBoxLayout *labs = new QHBoxLayout();
+          QLabel *label = new QLabel(IPlist_widget[tabb]);
+          label->setText("When a button is clicked, run command this command: ");
+          labs->addWidget(label);
+          labs->addSpacing(10);
+           comm.push_back(new QComboBox(IPlist_widget[tabb]));
+          comm[tabb]->addItems(commands);
+          labs->addWidget(comm[tabb]);
+          labs->addSpacing(10);
+          QPushButton *butt_all = new QPushButton();
+          butt_all->setText("Run command for all");
+          labs->addWidget(butt_all);
+          QSignalMapper* sigMapper = new QSignalMapper (this) ;
+          connect(butt_all, SIGNAL(clicked()), sigMapper, SLOT(map()));
+          sigMapper->setMapping(butt_all, comm[tabb]->currentText());
+          connect(sigMapper, SIGNAL(mapped(QString)), this, SLOT(runAll(QString)));
+          total_layout[tabb]->addLayout(labs);
+        } else if(k%5==0 && k!=0) {
+            total_layout[tabb]->addLayout(myHLayouts[numm]);
+            numm ++;
             myHLayouts.push_back(new QHBoxLayout);
         }
-       QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget);
-       comps.push_back(labelbed);
-       connect(comps[i],SIGNAL(clicked()),signalMapper,SLOT(map()));
-       signalMapper->setMapping(comps[i], QString::fromStdString(*lss));
+        QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget[tabb]);
+        comps.push_back(labelbed);
+        connect(comps[k],SIGNAL(clicked()),signalMapper,SLOT(map()));
+        signalMapper->setMapping(comps[k], QString::fromStdString(*lss));
 
 
-       myHLayouts[num]->addWidget(comps[i]);
+        myHLayouts[numm]->addWidget(comps[k]);
     }
     connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
-    fullLayout->addLayout(myHLayouts[num]);
-    IPlist_widget->setLayout(fullLayout);
+    total_layout[tabb]->addLayout(myHLayouts[numm]);
+    for(int i = 0; i!=tabb+1; i++) {
+        IPlist_widget[i]->setLayout(total_layout[i]);
+    }
+
 }
 
 void StartWidget::runAll(QString cmd) {
-    string com = cmd.toStdString();
+    string com = comm[tab->currentIndex()]->currentText().toStdString();
      for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
-         exec(com + *lss);
+
+         cout<<exec(com + *lss);
      }
 }
 
 void StartWidget::login() {
     string user, passw, txt;
+    usern = new QLineEdit();
+    passwo = new QLineEdit();
+    label = new QLabel(login_widget);
+    label_t = new QLabel(login_widget);
     QVBoxLayout *login_layout = new QVBoxLayout();
     QHBoxLayout *User_lay = new QHBoxLayout();
     QHBoxLayout *Pass_lay = new QHBoxLayout();
-    QLabel *label = new QLabel(login_widget);
     QLabel *user_label = new QLabel(login_widget);
     QLabel *pass_label = new QLabel(login_widget);
-    QLineEdit *usern = new QLineEdit();
-    QLineEdit *passwo = new QLineEdit();
-    QPushButton *login_button = new QPushButton("Login", login_widget);
+    login_button = new QPushButton("Login", login_widget);
     label->setText("Login in with the details you previously used");
-
+    label_t->setText("If you are new set a user name and password by typing credentials then click login");
     user_label->setText("Username:");
     pass_label->setText("Password:");
 
@@ -107,51 +117,69 @@ void StartWidget::login() {
     Pass_lay->addWidget(passwo);
 
     login_layout->addWidget(label);
+    login_layout->addWidget(label_t);
     login_layout->addSpacing(10);
     login_layout->addLayout(User_lay);
     login_layout->addSpacing(10);
     login_layout->addLayout(Pass_lay);
     login_layout->addSpacing(10);
     login_layout->addWidget(login_button);
+    connect(login_button, SIGNAL(clicked()), this, SLOT(loggerIn()));
     login_widget->setLayout(login_layout);
 }
-   /* fstream file;
-    file.open("logininfo.txt");
-    if(std::experimental::filesystem::exists("logininfo.txt")) {
-        label->setText("Login in with the details you previously used");
-        ifstream infile;
-        infile.open("logininfo.txt");
-        while(getline(infile, txt)) {
-            if(txt.find("username:")!=string::npos) {
-                user = txt.substr(9, txt.length());
-            } else if(txt.find("password:")!=string::npos) {
-                passw = txt.substr(9, txt.length());
-            }
+
+void StartWidget::loggerIn() {
+
+    bool use = false;
+    bool pas = false;
+    ifstream file;
+
+    string txt, user, passw;
+    file.open("../logininfo.txt");
+
+    while(getline(file, txt)) {
+        if(txt.find("username:")!=string::npos) {
+            user = txt.substr(9, txt.length());
+            use = true;
+        } else if(txt.find("password:")!=string::npos) {
+            passw = txt.substr(9, txt.length());
+            pas = true;
         }
+    }
+    if(pas && use) {
         if(usern->text().toStdString().compare(user)==0) {
             if(passwo->text().toStdString().compare(passw)==0) {
                 logged = true;
             }
         }
-        infile.close();
+        if(!logged) {
+            label_t->setText("Invalid Credentials try agian");
+        }
     } else {
-
-        label->setText("You are setting your username and password for the next time you sign in.");
         ofstream ofile;
-        ofile.open("logininfo.txt");
-        ofile<<"username:"<<usern->text().toStdString();
+        ofile.open("../logininfo.txt");
+        ofile<<"username:"<<usern->text().toStdString()<<endl;
         ofile<<"password:"<<passwo->text().toStdString();
-        ofile.close();
         logged = true;
     }
-    login_layout->addWidget(label);
-    login_layout->addWidget(usern);
-    login_layout->addWidget(passwo);
-}*/
+    if(logged) {
+        int i =1;
+        for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
+            string nam = to_string(i);
+            QString name = "Computers " + QString::fromStdString(nam);
+            tab->addTab(*tabber, name);
+        }
+        tab->addTab(settings_widget, "Settings");
+        tab->removeTab(0);
+        repaint();
+    }
+    file.close();
+}
 
 void StartWidget::execut(QString cmd) {
     string com = cmd.toStdString();
-    cout << exec("ping "+com);
+    string commer =comm[tab->currentIndex()]->currentText().toStdString();
+    cout << exec(commer+com);
 }
 
 //Send the command to the command line and return its output

@@ -30,21 +30,30 @@ public:
     string exec(string command);
     vector<string> ScanLAN();
     vector<QPushButton*> comps;
+    vector<QPushButton*> butt_alls;
+    QPushButton *login_button;
     vector<QHBoxLayout*> myHLayouts;
-    QStringList commands = {"ping ", "tracert"};
-    QVBoxLayout *fullLayout;
+    QStringList commands = {"ping ", "tracert "};
+    vector<QVBoxLayout*> total_layout;
     void login();
     void CompsbyIP();
 
 private:
-    QTabWidget* IPlist_widget;
+    vector<QTabWidget*> IPlist_widget;
     QTabWidget* login_widget;
     QTabWidget* settings_widget;
     vector<string> LAN;
     bool logged = false;
+    QLineEdit *usern;
+    QLineEdit *passwo;
+    QLabel *label;
+     QLabel *label_t;
+     QTabWidget* tab;
+     vector<QComboBox*> comm;
 
 public slots:
     void execut(QString cmd);
     void runAll(QString cmd);
+    void loggerIn();
 };
 #endif // STARTWIDGET_H
