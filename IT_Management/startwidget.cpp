@@ -15,12 +15,124 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
 
 
     //Set the tabs to the Screen
+
     login();
     CompsbyIP();
+    settings();
     //tab->addTab(IPlist_widget, "Computers");
     //tab->addTab(settings_widget, "Settings");
     tab->addTab(login_widget, "login");
     tab->setFixedSize(700, 500);
+}
+
+void StartWidget::settings() {
+    //Change login
+    change_log = new QLabel(settings_widget);
+    change_use = new QLabel(settings_widget);
+    change_pas = new QLabel(settings_widget);
+    change_log->setText("Change your login info here");
+    change_use->setText("Username: ");
+    change_pas->setText("Password: ");
+    change_user = new QLineEdit();
+    change_pass = new QLineEdit();
+    change_login = new QPushButton();
+    change_login->setText("Change Login");
+
+    change_u = new QHBoxLayout();
+    change_p = new QHBoxLayout();
+
+    change_full = new QVBoxLayout();
+
+    change_u->addWidget(change_use);
+    change_u->addWidget(change_user);
+
+    change_p->addWidget(change_pas);
+    change_p->addWidget(change_pass);
+
+    change_full->addWidget(change_log);
+    change_full->addLayout(change_u);
+    change_full->addLayout(change_p);
+
+    change_full->addWidget(change_login);
+
+    remover_butt = new QPushButton();
+    IP_remover = new QLineEdit();
+    remover = new QLabel(settings_widget);
+    rem_name = new QLabel(settings_widget);
+    removel = new QHBoxLayout();
+    rem_name->setText("Name/IP");
+    remover->setText("Enter the name or IP Adress you want ignored on the next scan.");
+    remover_butt->setText("Press to ignore entered Computer/IP");
+
+    removel->addWidget(rem_name);
+    removel->addWidget(IP_remover);
+    removel->addWidget(remover_butt);
+
+    change_full->addWidget(remover);
+    change_full->addLayout(removel);
+
+
+
+    scans_hard = new QHBoxLayout();
+    scans_netw = new QHBoxLayout();
+    scans_soft = new QHBoxLayout();
+    scan_hard = new QLineEdit();
+    scan_netw = new QLineEdit();
+    scan_soft = new QLineEdit();
+    scanner = new QLabel(settings_widget);
+    scan_had = new QLabel(settings_widget);
+    scan_sot = new QLabel(settings_widget);
+    scan_net = new QLabel(settings_widget);
+    minutes_txt = new QLabel(settings_widget);
+    minutes_tx = new QLabel(settings_widget);
+    minutes_t = new QLabel(settings_widget);
+    scanner->setText("Set the interval at which each scan occurs");
+    scan_had->setText("Scan Hardware Interval");
+    scan_net->setText("Scan Network Interval");
+    scan_sot->setText("Scan Software Interval");
+    minutes_txt->setText("minutes");
+    minutes_tx->setText("minutes");
+    minutes_t->setText("minutes");
+
+    scans_sot = new QPushButton();
+    scans_had = new QPushButton();
+    scans_net = new QPushButton();
+
+    scans_had->setText("Set Hardware Scan Interval");
+    scans_sot->setText("Set Sofware Scan Interval");
+    scans_net->setText("Set Network Scan Interval");
+
+    scans_hard->addWidget(scan_had);
+    scans_hard->addWidget(scan_hard);
+    scans_hard->addWidget(minutes_txt);
+    scans_hard->addWidget(scans_had);
+
+
+    scans_soft->addWidget(scan_sot);
+    scans_soft->addWidget(scan_soft);
+    scans_soft->addWidget(minutes_tx);
+    scans_soft->addWidget(scans_sot);
+
+    scans_netw->addWidget(scan_net);
+    scans_netw->addWidget(scan_netw);
+    scans_netw->addWidget(minutes_t);
+    scans_netw->addWidget(scans_net);
+
+    change_full->addWidget(scanner);
+    change_full->addLayout(scans_hard);
+    change_full->addLayout(scans_netw);
+    change_full->addLayout(scans_soft);
+
+    ScanNow = new QPushButton();
+    ScanNow->setText("Scan Now");
+
+    change_full->addWidget(ScanNow);
+
+    settings_widget->setLayout(change_full);
+}
+
+void StartWidget::changeLogin() {
+
 }
 
 StartWidget::~StartWidget()
