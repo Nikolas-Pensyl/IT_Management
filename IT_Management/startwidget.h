@@ -18,6 +18,7 @@
 #include <QLineEdit>
 #include <ctime>
 #include <QComboBox>
+#include <QMessageBox>
 
 using namespace std;
 class StartWidget : public QWidget
@@ -38,6 +39,7 @@ public:
     void login();
     void CompsbyIP();
     void settings();
+    void setCompsWid();
 
 private:
     vector<QTabWidget*> IPlist_widget;
@@ -45,6 +47,7 @@ private:
     QTabWidget* settings_widget;
     vector<string> LAN;
     bool logged = false;
+    int init = -1;
     QLineEdit *usern;
     QLineEdit *passwo;
 
@@ -89,10 +92,23 @@ private:
      QLabel *rem_name;
      QHBoxLayout *removel;
 
+     string password;
+     string username;
+
+     void message(QString str);
+     void validateIntervalScan();
+
+     int hardware_scan;
+     int software_scan;
+     int network_scan;
+
 public slots:
     void execut(QString cmd);
     void runAll(QString cmd);
     void loggerIn();
     void changeLogin();
+    void textSetting(int tabbe);
+    void changeInterval();
+    void reScan();
 };
 #endif // STARTWIDGET_H

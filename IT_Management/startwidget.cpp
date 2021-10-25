@@ -19,10 +19,73 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     login();
     CompsbyIP();
     settings();
-    //tab->addTab(IPlist_widget, "Computers");
-    //tab->addTab(settings_widget, "Settings");
+    validateIntervalScan();
     tab->addTab(login_widget, "login");
+    connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
     tab->setFixedSize(700, 500);
+}
+
+
+void StartWidget::textSetting(int tabbe) {
+    if(tab->indexOf(settings_widget)==tabbe) {
+        change_user->setText(QString::fromStdString(username));
+        change_pass->setText(QString::fromStdString(password));
+        scan_hard->setText(QString::fromStdString(to_string(hardware_scan)));
+        scan_soft->setText(QString::fromStdString(to_string(software_scan)));
+        scan_netw->setText(QString::fromStdString(to_string(network_scan)));
+    }
+}
+
+void StartWidget::reScan() {
+    int i = 0;
+    for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
+        IPlist_widget[i]->clear();
+        //tab->removeTab(tab->indexOf(IPlist_widget[i]));
+    }
+    myHLayouts.clear();
+    total_layout.clear();
+    IPlist_widget.clear();
+    comps.clear();
+    comm.clear();
+    label->clear();
+    label_t->clear();
+    LAN.clear();
+    LAN = ScanLAN();
+    CompsbyIP();
+    tab->repaint();
+}
+
+void StartWidget::changeLogin() {
+    username = change_user->text().toStdString();
+    password = change_pass->text().toStdString();
+    remove("../logininfo.txt");
+    ofstream ofile;
+    ofile.open("../logininfo.txt");
+    ofile<<"username:" << username <<endl;
+    ofile<<"password:"<<password<<endl;
+    ofile.close();
+    message("Successfully changed the login information!!");
+}
+
+void StartWidget::changeInterval() {
+    hardware_scan = atoi(scan_hard->text().toStdString().c_str());
+    software_scan = atoi(scan_soft->text().toStdString().c_str());
+    network_scan = atoi(scan_netw->text().toStdString().c_str());
+    remove("../ScanInfo.txt");
+    ofstream ofile;
+    ofile.open("../ScanInfo.txt");
+    ofile<<"Hardware:" << hardware_scan <<endl;
+    ofile<<"Software:"<<software_scan<<endl;
+    ofile<<"Network:"<<network_scan<<endl;
+    ofile.close();
+    message("Scan Interval changed successfully!!");
+}
+
+void StartWidget::message(QString str) {
+    QMessageBox msgBox;
+    msgBox.setText(str);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.exec();
 }
 
 void StartWidget::settings() {
@@ -35,9 +98,11 @@ void StartWidget::settings() {
     change_pas->setText("Password: ");
     change_user = new QLineEdit();
     change_pass = new QLineEdit();
+    change_user->setText(QString::fromStdString(username));
+    change_pass->setText(QString::fromStdString(password));
     change_login = new QPushButton();
     change_login->setText("Change Login");
-
+    connect(change_login, SIGNAL(clicked()), this, SLOT(changeLogin()));
     change_u = new QHBoxLayout();
     change_p = new QHBoxLayout();
 
@@ -79,6 +144,9 @@ void StartWidget::settings() {
     scan_hard = new QLineEdit();
     scan_netw = new QLineEdit();
     scan_soft = new QLineEdit();
+    scan_hard->setValidator(new QIntValidator(10, 1000, this));
+    scan_netw->setValidator(new QIntValidator(10, 1000, this));
+    scan_soft->setValidator(new QIntValidator(10, 1000, this));
     scanner = new QLabel(settings_widget);
     scan_had = new QLabel(settings_widget);
     scan_sot = new QLabel(settings_widget);
@@ -101,6 +169,10 @@ void StartWidget::settings() {
     scans_had->setText("Set Hardware Scan Interval");
     scans_sot->setText("Set Sofware Scan Interval");
     scans_net->setText("Set Network Scan Interval");
+
+    connect(scans_sot, SIGNAL(clicked()), this, SLOT(changeInterval()));
+    connect(scans_had, SIGNAL(clicked()), this, SLOT(changeInterval()));
+    connect(scans_net, SIGNAL(clicked()), this, SLOT(changeInterval()));
 
     scans_hard->addWidget(scan_had);
     scans_hard->addWidget(scan_hard);
@@ -125,14 +197,11 @@ void StartWidget::settings() {
 
     ScanNow = new QPushButton();
     ScanNow->setText("Scan Now");
+    connect(ScanNow, SIGNAL(clicked()), this, SLOT(reScan()));
 
     change_full->addWidget(ScanNow);
 
     settings_widget->setLayout(change_full);
-}
-
-void StartWidget::changeLogin() {
-
 }
 
 StartWidget::~StartWidget()
@@ -179,6 +248,7 @@ void StartWidget::CompsbyIP() {
             numm ++;
             myHLayouts.push_back(new QHBoxLayout);
         }
+
         QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget[tabb]);
         comps.push_back(labelbed);
         connect(comps[k],SIGNAL(clicked()),signalMapper,SLOT(map()));
@@ -190,8 +260,15 @@ void StartWidget::CompsbyIP() {
     connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
     total_layout[tabb]->addLayout(myHLayouts[numm]);
     for(int i = 0; i!=tabb+1; i++) {
-        IPlist_widget[i]->setLayout(total_layout[i]);
+        if(i>init) {
+            IPlist_widget[i]->setLayout(total_layout[i]);
+            init = i;
+        }
     }
+
+}
+
+void setCompsWid() {
 
 }
 
@@ -240,6 +317,42 @@ void StartWidget::login() {
     login_widget->setLayout(login_layout);
 }
 
+void StartWidget::validateIntervalScan() {
+    bool had = false, sof = false, net = false;
+    string txt, H, S, N;
+    ifstream file("../ScanInfo.txt");
+    while(getline(file, txt)) {
+        if(txt.find("Network:")!=string::npos) {
+            N = txt.substr(8, txt.length());
+            net = true;
+        } else if(txt.find("Hardware:")!=string::npos) {
+            H = txt.substr(9, txt.length());
+            had = true;
+        } else if(txt.find("Software:")!=string::npos) {
+            S = txt.substr(9, txt.length());
+            sof = true;
+        }
+    }
+    if(had && sof && net) {
+        hardware_scan = atoi(H.c_str());
+        software_scan = atoi(S.c_str());
+        network_scan = atoi(N.c_str());
+
+    } else {
+        hardware_scan = 30;
+        software_scan = 30;
+        network_scan = 30;
+        remove("../ScanInfo.txt");
+        ofstream ofile;
+        ofile.open("../ScanInfo.txt");
+        ofile<<"Hardware:" << hardware_scan <<endl;
+        ofile<<"Software:"<<software_scan<<endl;
+        ofile<<"Network:"<<network_scan<<endl;
+        ofile.close();
+    }
+
+}
+
 void StartWidget::loggerIn() {
 
     bool use = false;
@@ -262,6 +375,7 @@ void StartWidget::loggerIn() {
         if(usern->text().toStdString().compare(user)==0) {
             if(passwo->text().toStdString().compare(passw)==0) {
                 logged = true;
+
             }
         }
         if(!logged) {
@@ -275,6 +389,8 @@ void StartWidget::loggerIn() {
         logged = true;
     }
     if(logged) {
+        username = usern->text().toStdString();
+        password = passwo->text().toStdString();
         int i =1;
         for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
             string nam = to_string(i);
@@ -352,8 +468,18 @@ vector<string> StartWidget::ScanLAN() {
                   current++;
              }
              if(current==3 && line.compare(i, 1, " ")==0) {
-                 ls.push_back(line.substr(0, i));
-                 cout << line.substr(0, i) <<endl;
+                 bool dou = false;
+                 for(vector<string>::iterator k = ls.begin(); k!=ls.end(); k++) {
+                    if(k->compare(line.substr(0, i))==0) {
+                        dou  = true;
+                    }
+                 }
+                 if(!dou) {
+                     ls.push_back(line.substr(0, i));
+                     cout << line.substr(0, i) <<endl;
+                 } else {
+                     cout<<"test"<<endl;
+                 }
                  current = 0;
              }
 
