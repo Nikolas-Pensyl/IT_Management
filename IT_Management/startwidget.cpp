@@ -1,9 +1,16 @@
 #include "startwidget.h"
-// include OS
 
-//Run winbdoiwremnote.exe
 using namespace std;
 
+/*
+ * This method is the constructor of the 'StartWidget' class
+ * Which sets up anything that needs set up
+ * like the tabs of the program and the proper formating
+ * and connecting of objects as well as checking if
+ * the encryption is active by checking if 'logged' = true
+ * at which the program sends a signal as if the login_button
+ * has been pressed and invoking whatever that may
+ * */
 StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     //Create tabs
 
@@ -29,6 +36,12 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
 }
 
 
+/*
+ * This method sets the text input fields in the settings tab
+ * This is so if a user accidentially clicks the wrong button
+ * The user won't have the settings changed without changing
+ * the actual input fields
+ * */
 void StartWidget::textSetting(int tabbe) {
     if(tab->indexOf(settings_widget)==tabbe) {
         change_user->setText(QString::fromStdString(username));
@@ -39,6 +52,10 @@ void StartWidget::textSetting(int tabbe) {
     }
 }
 
+/*
+ * When this method is called it restarts the program
+ * which triggers a reScan
+ * */
 void StartWidget::reScan() {
     qDebug() << "Performing reboot";
     ofstream ofile;
@@ -48,6 +65,10 @@ void StartWidget::reScan() {
     qApp->exit(EXIT_CODE_REBOOT);
 }
 
+/*
+ * This method is the method activated when the change_login button is clicked
+ * This rewrites the login information for when the user logs in next
+ **/
 void StartWidget::changeLogin() {
     username = change_user->text().toStdString();
     password = change_pass->text().toStdString();
@@ -60,6 +81,13 @@ void StartWidget::changeLogin() {
     message("Successfully changed the login information!!");
 }
 
+
+/*
+ * This method is a SLOT (which is a method activated on a SIGNAL)
+ * This method takes the given input
+ * from the 'Hardware', 'Software' and 'Network' input field
+ * and rewrites hong long apart the scans should take place.
+**/
 void StartWidget::changeInterval() {
     hardware_scan = atoi(scan_hard->text().toStdString().c_str());
     software_scan = atoi(scan_soft->text().toStdString().c_str());
@@ -74,6 +102,10 @@ void StartWidget::changeInterval() {
     message("Scan Interval changed successfully!!");
 }
 
+/*
+ * This method takes a string as an input
+ * and outputs a popup notifying the user of the message
+ * */
 void StartWidget::message(QString str) {
     QMessageBox msgBox;
     msgBox.setText(str);
@@ -81,6 +113,10 @@ void StartWidget::message(QString str) {
     msgBox.exec();
 }
 
+/*
+ * This method is called on the start of the program
+ * This method is responsible for making the layout of the settings tab
+ * */
 void StartWidget::settings() {
     //Change login
     change_log = new QLabel(settings_widget);
@@ -197,10 +233,25 @@ void StartWidget::settings() {
     settings_widget->setLayout(change_full);
 }
 
+/*
+ * This is the deletion method
+ * it is responsible for deleting this class
+ * which as of right now is not needed as this is the main class
+ * But it is kept for furture possible implementation
+ * */
 StartWidget::~StartWidget()
 {
 }
 
+
+/*
+ * This method is called at the start of the program
+ * it is responsible for all the 'Computer X' tabs
+ * It creates thirty 'IP' buttons per tab in case there are more than 30
+ * And it creates 6 rows with 5 buttons in each row
+ * every button starts with the text of the IP and can be
+ * changed to the name of a computer
+ * */
 void StartWidget::CompsbyIP() {
     //Scan LAN
     LAN = ScanLAN();
@@ -258,10 +309,14 @@ void StartWidget::CompsbyIP() {
 
 }
 
-void setCompsWid() {
 
-}
-
+/*
+ * This method is run when any of the 'Run all' buttons is pressed
+ * on any of the 'Computers X' tabs
+ * After which this method reads the current command in the given box
+ * which the program then runs the command through any computer
+ * that was previously detected on the Network
+ * **/
 void StartWidget::runAll(QString cmd) {
     string com = comm[tab->currentIndex()]->currentText().toStdString();
      for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
@@ -270,6 +325,20 @@ void StartWidget::runAll(QString cmd) {
      }
 }
 
+
+/*
+ * This method is Responsible
+ * for the UI of the login tab
+ * This method is also responsible for detecting the proper credentials
+ * needed to login, but if the program was rebooted from within
+ * The program creates an encryption key that is then saved and called
+ * upon in this file after which if matched
+ * automatically logs the user in and removes the
+ * encryption key for security reasons otherwise
+ * this method looks at the required username and password
+ * and saves it for later to check agianst when the user presses
+ * the login button
+ * */
 void StartWidget::login() {
     usern = new QLineEdit();
     passwo = new QLineEdit();
@@ -342,6 +411,15 @@ void StartWidget::login() {
     remove("../loggedin");
 }
 
+/*
+ * This method is called automatically at the start of the
+ * program and scans the proper file
+ * to find the scanning interval settings the user desired
+ * if the file is not properly located or
+ * parts of the file are missing
+ * the program will reset the interval scan
+ * to the default 30 min
+ * */
 void StartWidget::validateIntervalScan() {
     bool had = false, sof = false, net = false;
     string txt, H, S, N;
@@ -378,6 +456,19 @@ void StartWidget::validateIntervalScan() {
 
 }
 
+
+/*
+ * This is the method called when 1 of two things occur:
+ * 1) if the user presses the login button the
+ * information entered is compared with the credentials read in earlier
+ * if they match the user is logged in otherwise the user
+ * is told the credentials are incorrect and must try agian
+ * 2) If the program is told to reboot an encryption key is made
+ * and after intialization the user is automatically logged in.
+ *
+ * After the user is logged in from either way the UI is remade to
+ * remove the login page and display the 'Settings and 'Computers X' tabs
+ * */
 void StartWidget::loggerIn() {
     if(pas && use && !logged) {
         if(usern->text().toStdString().compare(user)==0) {
@@ -413,14 +504,31 @@ void StartWidget::loggerIn() {
 
 }
 
+/*
+ * This method is called when an individual button on a
+ * 'Computers X' tab is pressed. The method takes in
+ * the Computer IP' button that was pressed,
+ * Then it looks at the active command in the Combo Box
+ * at which point the method runs the specified command
+ * on the specified computer.
+ * */
 void StartWidget::execut(QString cmd) {
     string com = cmd.toStdString();
     string commer =comm[tab->currentIndex()]->currentText().toStdString();
     cout << exec(commer+com);
 }
 
-//Send the command to the command line and return its output
-//for a multi-command do && between commands for two commands
+/*
+ * This command takes a full command and sends it to the command
+ * line. If you want multiple commands put '&&' inbetween each command
+ * to get the same command prompt as after this method ends.
+ * The corresponding command line is closed and if called agian
+ * the method opens a new command line to utilize.
+ * This method also returns the output to where it was called.
+ * The last thing this method does is provide a live output to
+ * a text only pane as well as provide the output to a text file
+ * with a time log to know what went wrong if something went wrong.
+ * */
 string StartWidget::exec(string command) {
     char buffer[128];
     string result = "";
@@ -457,6 +565,15 @@ string StartWidget::exec(string command) {
     return result;
  }
 
+/*
+ * This method Scans the actual network
+ * to detect what computers are connected to
+ * the computers network and then will first
+ * parse the output to seperate each individual computer
+ * after which each non-duplicate IP will outputed to the
+ * live text pane as well as sent back to wherever
+ * this method was called in the format of a vector<string>
+ * */
 vector<string> StartWidget::ScanLAN() {
     //the '&&' runs multiple commands
    string ts = exec("arp -a");
@@ -495,5 +612,3 @@ vector<string> StartWidget::ScanLAN() {
       }
     return ls;
 }
-
-
