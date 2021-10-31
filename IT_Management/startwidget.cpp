@@ -23,6 +23,9 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     tab->addTab(login_widget, "login");
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
     tab->setFixedSize(700, 500);
+    if(logged) {
+        emit login_button->clicked();
+    }
 }
 
 
@@ -37,22 +40,12 @@ void StartWidget::textSetting(int tabbe) {
 }
 
 void StartWidget::reScan() {
-    int i = 0;
-    for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
-        IPlist_widget[i]->clear();
-        //tab->removeTab(tab->indexOf(IPlist_widget[i]));
-    }
-    myHLayouts.clear();
-    total_layout.clear();
-    IPlist_widget.clear();
-    comps.clear();
-    comm.clear();
-    label->clear();
-    label_t->clear();
-    LAN.clear();
-    LAN = ScanLAN();
-    CompsbyIP();
-    tab->repaint();
+    qDebug() << "Performing reboot";
+    ofstream ofile;
+    ofile.open("../loggedin");
+    ofile<<encrypt;
+    ofile.close();
+    qApp->exit(EXIT_CODE_REBOOT);
 }
 
 void StartWidget::changeLogin() {
@@ -260,10 +253,7 @@ void StartWidget::CompsbyIP() {
     connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
     total_layout[tabb]->addLayout(myHLayouts[numm]);
     for(int i = 0; i!=tabb+1; i++) {
-        if(i>init) {
             IPlist_widget[i]->setLayout(total_layout[i]);
-            init = i;
-        }
     }
 
 }
@@ -281,7 +271,6 @@ void StartWidget::runAll(QString cmd) {
 }
 
 void StartWidget::login() {
-    string user, passw, txt;
     usern = new QLineEdit();
     passwo = new QLineEdit();
     label = new QLabel(login_widget);
@@ -315,6 +304,42 @@ void StartWidget::login() {
     login_layout->addWidget(login_button);
     connect(login_button, SIGNAL(clicked()), this, SLOT(loggerIn()));
     login_widget->setLayout(login_layout);
+
+    ifstream ifile, file;
+
+    file.open("../logininfo.txt");
+
+    while(getline(file, txt)) {
+        if(txt.find("username:")!=string::npos) {
+            user = txt.substr(9, txt.length());
+            use = true;
+        } else if(txt.find("password:")!=string::npos) {
+            passw = txt.substr(9, txt.length());
+            pas = true;
+        }
+    }
+
+    file.close();
+
+    ifile.open("../loggedin");
+
+    while(getline(ifile, txt)) {
+        if(txt.compare(encrypt)==0) {
+            logged = true;
+            if(use && pas) {
+
+                username = user;
+                password = passw;
+            } else {
+                username = "Username";
+                password = "Password";
+            }
+
+        }
+    }
+    ifile.close();
+
+    remove("../loggedin");
 }
 
 void StartWidget::validateIntervalScan() {
@@ -354,43 +379,27 @@ void StartWidget::validateIntervalScan() {
 }
 
 void StartWidget::loggerIn() {
-
-    bool use = false;
-    bool pas = false;
-    ifstream file;
-
-    string txt, user, passw;
-    file.open("../logininfo.txt");
-
-    while(getline(file, txt)) {
-        if(txt.find("username:")!=string::npos) {
-            user = txt.substr(9, txt.length());
-            use = true;
-        } else if(txt.find("password:")!=string::npos) {
-            passw = txt.substr(9, txt.length());
-            pas = true;
-        }
-    }
-    if(pas && use) {
+    if(pas && use && !logged) {
         if(usern->text().toStdString().compare(user)==0) {
             if(passwo->text().toStdString().compare(passw)==0) {
                 logged = true;
+                username = usern->text().toStdString();
+                password = passwo->text().toStdString();
 
             }
         }
         if(!logged) {
             label_t->setText("Invalid Credentials try agian");
         }
-    } else {
+    } else if (!logged && (!pas || !use)){
         ofstream ofile;
         ofile.open("../logininfo.txt");
         ofile<<"username:"<<usern->text().toStdString()<<endl;
         ofile<<"password:"<<passwo->text().toStdString();
+        ofile.close();
         logged = true;
     }
     if(logged) {
-        username = usern->text().toStdString();
-        password = passwo->text().toStdString();
         int i =1;
         for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
             string nam = to_string(i);
@@ -401,7 +410,7 @@ void StartWidget::loggerIn() {
         tab->removeTab(0);
         repaint();
     }
-    file.close();
+
 }
 
 void StartWidget::execut(QString cmd) {
@@ -477,8 +486,6 @@ vector<string> StartWidget::ScanLAN() {
                  if(!dou) {
                      ls.push_back(line.substr(0, i));
                      cout << line.substr(0, i) <<endl;
-                 } else {
-                     cout<<"test"<<endl;
                  }
                  current = 0;
              }

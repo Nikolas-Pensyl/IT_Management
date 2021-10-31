@@ -18,8 +18,13 @@
 #include <QLineEdit>
 #include <ctime>
 #include <QComboBox>
+#include <QDebug>
+#include <QApplication>
 #include <QMessageBox>
+#include <QAction>
 
+
+static int const EXIT_CODE_REBOOT = -99;
 using namespace std;
 class StartWidget : public QWidget
 {
@@ -42,6 +47,7 @@ public:
     void setCompsWid();
 
 private:
+
     vector<QTabWidget*> IPlist_widget;
     QTabWidget* login_widget;
     QTabWidget* settings_widget;
@@ -101,6 +107,12 @@ private:
      int hardware_scan;
      int software_scan;
      int network_scan;
+
+     QAction* actionReboot;
+     const string encrypt = "UYgUYGGUhjjkh&*&(987979HHJHUHiuiiuh7*&^";
+
+     bool pas=false, use=false;
+     string txt, passw, user;
 
 public slots:
     void execut(QString cmd);
