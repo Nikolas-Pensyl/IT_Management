@@ -23,13 +23,16 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QAction>
-#include <time.h>
 
 /*
  * This is the number used to indicate a reboot of the program
  * Which can be seen by any .cpp file that includes this .h file
  * */
-static int const EXIT_CODE_REBOOT = -99;
+static int const EXIT_CODE_REBOOT_NET = -99;
+static int const EXIT_CODE_REBOOT_SOFT = -98;
+static int const EXIT_CODE_REBOOT_HARD = -97;
+
+
 using namespace std;
 
 /*
@@ -42,8 +45,11 @@ class StartWidget : public QWidget
 
 public:
     //These are the methods to be called by an outside class
-    StartWidget(QWidget *parent = nullptr);
+    StartWidget(QWidget *parent = nullptr, int current_code = 0);
     ~StartWidget();
+
+protected:
+    void timerEvent(QTimerEvent *e);
 
     private:
     /*
@@ -140,6 +146,20 @@ public:
      int software_scan;
      int network_scan;
 
+     int hardware_time=-1;
+     int software_time=-1;
+     int network_time=-1;
+
+     bool hard_soft;
+     bool hard_net;
+     bool soft_net;
+
+     //This variable holds when the QTimerEvent method will be called
+     //It is started after the user is logged in.
+     QTimer *timerID_hard;
+     QTimer *timerID_soft;
+     QTimer *timerID_net;
+
      //This is the encryption key used for reboots
      const string encrypt = "UYgUYGGUhjjkDDGh&36*&(987979HtyHJreyHFFUtyyyiutiiuh7*&^";
 
@@ -165,5 +185,7 @@ public slots:
     void textSetting(int tabbe);
     void changeInterval();
     void reScan();
+    void reScanHard();
+    void reScanSoft();
 };
 #endif // STARTWIDGET_H

@@ -11,7 +11,7 @@ using namespace std;
  * at which the program sends a signal as if the login_button
  * has been pressed and invoking whatever that may
  * */
-StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
+StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     //Create tabs
 
     tab = new QTabWidget(this);
@@ -30,8 +30,51 @@ StartWidget::StartWidget(QWidget *parent) : QWidget(parent) {
     tab->addTab(login_widget, "login");
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
     tab->setFixedSize(700, 500);
+
+    hard_soft = hardware_scan==software_scan;
+    soft_net = software_scan==network_scan;
+    hard_net = hardware_scan==network_scan;
+
     if(logged) {
         emit login_button->clicked();
+        if(current_code==EXIT_CODE_REBOOT_NET) {
+            if(soft_net) {
+                //Scan Software
+                cout<<"test";
+            } else {
+                timerID_soft->setInterval(software_time);
+            }
+            if(hard_net) {
+                //Scan Hardware
+            } else {
+                timerID_hard->setInterval(hardware_time);
+            }
+
+        } else if(current_code==EXIT_CODE_REBOOT_HARD) {
+            if(hard_soft) {
+                //Scan Software
+            } else {
+                timerID_soft->setInterval(software_time);
+            }
+            if(hard_net) {
+                //Scan Network
+            } else {
+                timerID_hard->setInterval(network_time);
+            }
+
+        } else if(current_code==EXIT_CODE_REBOOT_SOFT) {
+            if(hard_soft) {
+                //Scan Hardware
+            } else {
+                timerID_hard->setInterval(hardware_time);
+            }
+            if(soft_net) {
+                //Scan Network
+                cout<<"test";
+            } else {
+                timerID_net->setInterval(network_time);
+            }
+        }
     }
 }
 
@@ -57,12 +100,39 @@ void StartWidget::textSetting(int tabbe) {
  * which triggers a reScan
  * */
 void StartWidget::reScan() {
-    qDebug() << "Performing reboot";
+    qDebug() << "Performing reboot0";
     ofstream ofile;
     ofile.open("../loggedin");
-    ofile<<encrypt;
+    ofile<<encrypt<<endl;
+    ofile<<"0"<<endl;
+    ofile<<timerID_hard->remainingTime()<<endl;
+    ofile<<timerID_soft->remainingTime()<<endl;
     ofile.close();
-    qApp->exit(EXIT_CODE_REBOOT);
+    qApp->exit(EXIT_CODE_REBOOT_NET);
+}
+
+void StartWidget::reScanHard() {
+    qDebug() << "Performing reboot1";
+    ofstream ofile;
+    ofile.open("../loggedin");
+    ofile<<encrypt<<endl;
+    ofile<<timerID_net->remainingTime()<<endl;
+    ofile<<"0"<<endl;
+    ofile<<timerID_soft->remainingTime()<<endl;
+    ofile.close();
+    qApp->exit(EXIT_CODE_REBOOT_HARD);
+}
+
+void StartWidget::reScanSoft() {
+    qDebug() << "Performing reboot2";
+    ofstream ofile;
+    ofile.open("../loggedin");
+    ofile<<encrypt<<endl;
+    ofile<<timerID_net->remainingTime()<<endl;
+    ofile<<timerID_hard->remainingTime()<<endl;
+    ofile<<"0"<<endl;
+    ofile.close();
+    qApp->exit(EXIT_CODE_REBOOT_SOFT);
 }
 
 /*
@@ -100,6 +170,9 @@ void StartWidget::changeInterval() {
     ofile<<"Network:"<<network_scan<<endl;
     ofile.close();
     message("Scan Interval changed successfully!!");
+    timerID_hard->setInterval(hardware_scan*60*1000);
+    timerID_soft->setInterval(software_scan*60*1000);
+    timerID_net->setInterval(network_scan*60*1000);
 }
 
 /*
@@ -391,7 +464,7 @@ void StartWidget::login() {
     file.close();
 
     ifile.open("../loggedin");
-
+    int i =0;
     while(getline(ifile, txt)) {
         if(txt.compare(encrypt)==0) {
             logged = true;
@@ -405,8 +478,17 @@ void StartWidget::login() {
             }
 
         }
+        if(i==1) {
+            network_time = atoi(txt.c_str());
+        } else if (i==2) {
+            hardware_time = atoi(txt.c_str());
+        } else if(i==3) {
+            software_time = atoi(txt.c_str());
+        }
+        i++;
     }
     ifile.close();
+    cout<<network_time<<" "<<hardware_time<<" "<<software_time<<endl;
 
     remove("../loggedin");
 }
@@ -500,8 +582,23 @@ void StartWidget::loggerIn() {
         tab->addTab(settings_widget, "Settings");
         tab->removeTab(0);
         repaint();
+        timerID_hard = new QTimer(this);
+        connect(timerID_hard, SIGNAL(timeout()), this, SLOT(reScanHard()));
+        timerID_hard->start(hardware_scan*60*1000);
+
+        timerID_soft = new QTimer(this);
+        connect(timerID_soft, SIGNAL(timeout()), this, SLOT(reScan()));
+        timerID_soft->start(software_scan*60*1000);
+
+        timerID_net = new QTimer(this);
+        connect(timerID_net, SIGNAL(timeout()), this, SLOT(reScan()));
+        timerID_net->start(network_scan*60*1000);
     }
 
+}
+
+void StartWidget::timerEvent(QTimerEvent *e) {
+    Q_UNUSED(e);
 }
 
 /*
