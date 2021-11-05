@@ -61,6 +61,7 @@ protected:
      * */
     string exec(string command);
     vector<string> ScanLAN();
+    bool validateVal(int IP);
 
     //'Computers X' widget items
     vector<QPushButton*> comps;
@@ -82,6 +83,7 @@ protected:
 
 
     vector<QTabWidget*> IPlist_widget;
+    vector<string> blackList_IP;
     QTabWidget* login_widget;
     QTabWidget* settings_widget;
     vector<string> LAN;
@@ -126,10 +128,19 @@ protected:
      QPushButton *scans_net;
 
      //removal 'IP' part of the settings widget
+     QVBoxLayout *description_text;
      QPushButton *remover_butt;
-     QLineEdit *IP_remover;
+     QLineEdit *IP_remover_z;
+     QLineEdit *IP_remover_o;
+     QLineEdit *IP_remover_t;
+     QLineEdit *IP_remover_th;
      QLabel *remover;
+     QLabel *description;
+     QLabel *description_t;
      QLabel *rem_name;
+     QLabel *rem_dot_z;
+     QLabel *rem_dot_o;
+     QLabel *rem_dot_t;
      QHBoxLayout *removel;
 
      //this stores the current username and password
@@ -187,5 +198,6 @@ public slots:
     void reScan();
     void reScanHard();
     void reScanSoft();
+    void blackList();
 };
 #endif // STARTWIDGET_H

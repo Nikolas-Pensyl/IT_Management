@@ -222,21 +222,59 @@ void StartWidget::settings() {
 
     change_full->addWidget(change_login);
 
+    description_text = new QVBoxLayout();
     remover_butt = new QPushButton();
-    IP_remover = new QLineEdit();
+    IP_remover_z = new QLineEdit();
+    IP_remover_o = new QLineEdit();
+    IP_remover_t = new QLineEdit();
+    IP_remover_th = new QLineEdit();
     remover = new QLabel(settings_widget);
+    description = new QLabel(settings_widget);
+    description_t = new QLabel(settings_widget);
     rem_name = new QLabel(settings_widget);
+    rem_dot_z = new QLabel(settings_widget);
+    rem_dot_o = new QLabel(settings_widget);
+    rem_dot_t = new QLabel(settings_widget);
     removel = new QHBoxLayout();
-    rem_name->setText("Name/IP");
+    rem_name->setText("IP Address: ");
+    rem_dot_z->setText(".");
+    rem_dot_o->setText(".");
+    rem_dot_t->setText(".");
+    description->setText("If you leave a space black and press the button it will put a zero when blacklisting");
+    description_t->setText("Enter a value between 0 and 255 in each box to blacklist an IP address");
     remover->setText("Enter the name or IP Adress you want ignored on the next scan.");
     remover_butt->setText("Press to ignore entered Computer/IP");
 
+    IP_remover_z->setValidator(new QIntValidator(0, 255, this));
+    IP_remover_o->setValidator(new QIntValidator(0, 255, this));
+    IP_remover_t->setValidator(new QIntValidator(0, 255, this));
+    IP_remover_th->setValidator(new QIntValidator(0, 255, this));
+
+    connect(remover_butt, SIGNAL(clicked()), this, SLOT(blackList()));
     removel->addWidget(rem_name);
-    removel->addWidget(IP_remover);
+    removel->addWidget(IP_remover_z);
+    removel->addWidget(rem_dot_z);
+    removel->addWidget(IP_remover_o);
+    removel->addWidget(rem_dot_o);
+    removel->addWidget(IP_remover_t);
+    removel->addWidget(rem_dot_t);
+    removel->addWidget(IP_remover_th);
     removel->addWidget(remover_butt);
 
-    change_full->addWidget(remover);
-    change_full->addLayout(removel);
+    /*remover->setContentsMargins(1, 30, 1, 0);
+    remover->setFixedHeight(50);
+    description->setContentsMargins(1, 0, 1, 0);
+    description->setFixedHeight(30);
+    description_t->setContentsMargins(1, 0, 1, 0);
+    description_t->setFixedHeight(30);*/
+    description_text->setSpacing(5);
+
+    description_text->addWidget(remover);
+    description_text->addWidget(description);
+    description_text->addWidget(description_t);
+    description_text->addLayout(removel);
+
+    change_full->addLayout(description_text);
 
 
 
@@ -314,6 +352,31 @@ void StartWidget::settings() {
  * */
 StartWidget::~StartWidget()
 {
+}
+
+void StartWidget::blackList() {
+    int IP_z = atoi(IP_remover_z->text().toStdString().c_str());
+    int IP_o = atoi(IP_remover_o->text().toStdString().c_str());
+    int IP_t = atoi(IP_remover_t->text().toStdString().c_str());
+    int IP_th = atoi(IP_remover_th->text().toStdString().c_str());
+    if(validateVal(IP_z) && validateVal(IP_o) && validateVal(IP_t) && validateVal(IP_th)) {
+        string iper = to_string(IP_z) + "." + to_string(IP_o) +"."+ to_string(IP_t) +"."+ to_string(IP_th) + "  ";
+        blackList_IP.push_back(iper);
+        ofstream ofile;
+        ofile.open("../blackList.txt");
+        for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
+            ofile<<*IPss<<endl;
+        }
+        ofile.close();
+        message("IP successfully added to black List!!");
+
+    } else {
+        message("Invalid IP. Check the address and try agian.");
+    }
+}
+
+bool StartWidget::validateVal(int IP) {
+    return IP>=0 && IP<=255;
 }
 
 
@@ -677,10 +740,18 @@ vector<string> StartWidget::ScanLAN() {
 
    cout << ts;
 
+   //Gets the black Listed IPs from the txt file
+   ifstream ifile;
+   ifile.open("../blackList.txt");
+   string line;
+       while(getline(ifile, line)) {
+           blackList_IP.push_back(line);
+       }
+       ifile.close();
+
    //This parses the output string to only get the IPs of the output
    std::vector<string> ls;
    std::istringstream f(ts);
-      std::string line;
       while (std::getline(f, line)) {
           int current = 0;
           for(int i =0; i<line.length(); i++) {
@@ -697,10 +768,18 @@ vector<string> StartWidget::ScanLAN() {
                         dou  = true;
                     }
                  }
+                 for(vector<string>::iterator l = blackList_IP.begin(); l!=blackList_IP.end() && !dou; l++) {
+                     if(l->substr(0, l->length()).compare(line.substr(2, i))==0) {
+                         dou = true;
+                         cout<<"test";
+                     }
+                     cout<<*l<< "p"<<endl;
+                 }
                  if(!dou) {
                      ls.push_back(line.substr(0, i));
                      cout << line.substr(0, i) <<endl;
                  }
+
                  current = 0;
              }
 
