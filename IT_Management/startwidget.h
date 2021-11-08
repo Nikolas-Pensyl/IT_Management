@@ -107,6 +107,8 @@ protected:
      QLabel *change_pas;
      QHBoxLayout *change_u;
      QHBoxLayout *change_p;
+     QVBoxLayout *login_layout;
+
      QVBoxLayout *change_full;
 
      //scanner on settings
@@ -134,9 +136,7 @@ protected:
      QLineEdit *IP_remover_o;
      QLineEdit *IP_remover_t;
      QLineEdit *IP_remover_th;
-     QLabel *remover;
      QLabel *description;
-     QLabel *description_t;
      QLabel *rem_name;
      QLabel *rem_dot_z;
      QLabel *rem_dot_o;

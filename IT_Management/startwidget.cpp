@@ -191,13 +191,15 @@ void StartWidget::message(QString str) {
  * This method is responsible for making the layout of the settings tab
  * */
 void StartWidget::settings() {
+    QFont font;
+
     //Change login
     change_log = new QLabel(settings_widget);
     change_use = new QLabel(settings_widget);
     change_pas = new QLabel(settings_widget);
     change_log->setText("Change your login info here");
     change_use->setText("Username: ");
-    change_pas->setText("Password: ");
+    change_pas->setText("Password:  ");
     change_user = new QLineEdit();
     change_pass = new QLineEdit();
     change_user->setText(QString::fromStdString(username));
@@ -207,20 +209,28 @@ void StartWidget::settings() {
     connect(change_login, SIGNAL(clicked()), this, SLOT(changeLogin()));
     change_u = new QHBoxLayout();
     change_p = new QHBoxLayout();
-
+    login_layout = new QVBoxLayout();
     change_full = new QVBoxLayout();
+
+    font = change_log->font();
+    font.setPointSize(10);
+    settings_widget->setFont(font);
+
+    change_log->setFixedHeight(35);
 
     change_u->addWidget(change_use);
     change_u->addWidget(change_user);
-
     change_p->addWidget(change_pas);
     change_p->addWidget(change_pass);
 
-    change_full->addWidget(change_log);
-    change_full->addLayout(change_u);
-    change_full->addLayout(change_p);
+    login_layout->addWidget(change_log);
+    login_layout->addLayout(change_u);
+    login_layout->addLayout(change_p);
+    login_layout->addWidget(change_login);
 
-    change_full->addWidget(change_login);
+    login_layout->setSpacing(3);
+    login_layout->setContentsMargins(0, 0, 20, 20);
+    change_full->addLayout(login_layout);
 
     description_text = new QVBoxLayout();
     remover_butt = new QPushButton();
@@ -228,9 +238,7 @@ void StartWidget::settings() {
     IP_remover_o = new QLineEdit();
     IP_remover_t = new QLineEdit();
     IP_remover_th = new QLineEdit();
-    remover = new QLabel(settings_widget);
     description = new QLabel(settings_widget);
-    description_t = new QLabel(settings_widget);
     rem_name = new QLabel(settings_widget);
     rem_dot_z = new QLabel(settings_widget);
     rem_dot_o = new QLabel(settings_widget);
@@ -240,10 +248,8 @@ void StartWidget::settings() {
     rem_dot_z->setText(".");
     rem_dot_o->setText(".");
     rem_dot_t->setText(".");
-    description->setText("If you leave a space black and press the button it will put a zero when blacklisting");
-    description_t->setText("Enter a value between 0 and 255 in each box to blacklist an IP address");
-    remover->setText("Enter the name or IP Adress you want ignored on the next scan.");
-    remover_butt->setText("Press to ignore entered Computer/IP");
+    description->setText("If you leave a space black and press the button it will put a zero when blacklisting.\nEnter a value between 0 and 255 in each box to blacklist an IP address\nEnter the IP Adress you want ignored on the next scan.\nIf an IP was already blacklisted pressing the button with the associated IP entered will readd the IP on next scan.");
+    remover_butt->setText("Press to ignore or add entered IP  ");
 
     IP_remover_z->setValidator(new QIntValidator(0, 255, this));
     IP_remover_o->setValidator(new QIntValidator(0, 255, this));
@@ -260,18 +266,14 @@ void StartWidget::settings() {
     removel->addWidget(rem_dot_t);
     removel->addWidget(IP_remover_th);
     removel->addWidget(remover_butt);
+    description->setFixedHeight(110);
+    description->setContentsMargins(0, 8, 0, 8);
+    description->setFont(font);
 
-    /*remover->setContentsMargins(1, 30, 1, 0);
-    remover->setFixedHeight(50);
-    description->setContentsMargins(1, 0, 1, 0);
-    description->setFixedHeight(30);
-    description_t->setContentsMargins(1, 0, 1, 0);
-    description_t->setFixedHeight(30);*/
-    description_text->setSpacing(5);
+    description_text->setSpacing(3);
+    description_text->setContentsMargins(0, 10, 0, 50);
 
-    description_text->addWidget(remover);
     description_text->addWidget(description);
-    description_text->addWidget(description_t);
     description_text->addLayout(removel);
 
     change_full->addLayout(description_text);
@@ -296,7 +298,7 @@ void StartWidget::settings() {
     minutes_t = new QLabel(settings_widget);
     scanner->setText("Set the interval at which each scan occurs");
     scan_had->setText("Scan Hardware Interval");
-    scan_net->setText("Scan Network Interval");
+    scan_net->setText("Scan Network Interval ");
     scan_sot->setText("Scan Software Interval");
     minutes_txt->setText("minutes");
     minutes_tx->setText("minutes");
@@ -306,9 +308,9 @@ void StartWidget::settings() {
     scans_had = new QPushButton();
     scans_net = new QPushButton();
 
-    scans_had->setText("Set Hardware Scan Interval");
-    scans_sot->setText("Set Sofware Scan Interval");
-    scans_net->setText("Set Network Scan Interval");
+    scans_had->setText("Set Hardware Scan Interval ");
+    scans_sot->setText("Set Software Scan Interval  ");
+    scans_net->setText("Set Network Scan Interval   ");
 
     connect(scans_sot, SIGNAL(clicked()), this, SLOT(changeInterval()));
     connect(scans_had, SIGNAL(clicked()), this, SLOT(changeInterval()));
@@ -329,6 +331,8 @@ void StartWidget::settings() {
     scans_netw->addWidget(scan_netw);
     scans_netw->addWidget(minutes_t);
     scans_netw->addWidget(scans_net);
+
+    scanner->setFont(font);
 
     change_full->addWidget(scanner);
     change_full->addLayout(scans_hard);
