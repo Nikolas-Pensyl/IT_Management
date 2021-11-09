@@ -420,7 +420,7 @@ void StartWidget::reName() {
             ofstream ofile;
             ofile.open("../IP_Names.txt");
             for(map<string, string>::iterator IP_NAMES = IP_Name.begin(); IP_NAMES!=IP_Name.end(); IP_NAMES++) {
-                ofile<<IP_NAMES->first<<","<<IP_namers->text().toStdString()<<endl;
+                ofile<<IP_NAMES->first<<","<<IP_NAMES->second<<endl;
                 cout<<IP_NAMES->first;
             }
             ofile.close();
