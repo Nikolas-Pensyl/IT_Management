@@ -98,7 +98,6 @@ protected:
     QLineEdit *passwo;
 
     QLabel *label;
-     QLabel *label_t;
      QTabWidget* tab;
      vector<QComboBox*> comm;
 
@@ -114,10 +113,13 @@ protected:
      QHBoxLayout *change_u;
      QHBoxLayout *change_p;
      QVBoxLayout *login_layout;
+     QVBoxLayout *full_login_layout;
+     QHBoxLayout *login_butto;
 
      QVBoxLayout *change_full;
 
      //scanner on settings
+     QVBoxLayout *scan_all;
      QHBoxLayout *scans_hard;
      QHBoxLayout *scans_soft;
      QHBoxLayout *scans_netw;

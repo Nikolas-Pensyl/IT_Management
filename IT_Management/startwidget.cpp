@@ -230,7 +230,7 @@ void StartWidget::settings() {
     login_layout->addWidget(change_login);
 
     login_layout->setSpacing(3);
-   // login_layout->setContentsMargins(0, 0, 20, 20);
+    login_layout->setContentsMargins(0, 0, 0, 20);
     change_full->addLayout(login_layout);
 
     description_text = new QVBoxLayout();
@@ -267,12 +267,13 @@ void StartWidget::settings() {
     removel->addWidget(rem_dot_t);
     removel->addWidget(IP_remover_th);
     removel->addWidget(remover_butt);
-    description->setFixedHeight(110);
-    description->setContentsMargins(0, 8, 0, 8);
+    description->setFixedHeight(90);
+    description->setContentsMargins(0, 8, 0, 0);
+    removel->setContentsMargins(0, 0, 0, 0);
     description->setFont(font);
 
     description_text->setSpacing(3);
-    //description_text->setContentsMargins(0, 10, 0, 50);
+    description_text->setContentsMargins(0, 10, 0, 20);
 
     description_text->addWidget(description);
     description_text->addLayout(removel);
@@ -295,7 +296,7 @@ void StartWidget::settings() {
     IP_namer_th = new QLineEdit();
     IP_namers = new QLineEdit();
     namer_button = new QPushButton();
-    namer_button->setText("Rename the IP");
+    namer_button->setText("  Rename the IP  ");
     name_dot_z->setText(".");
     name_dot_o->setText(".");
     name_dot_t->setText(".");
@@ -316,11 +317,12 @@ void StartWidget::settings() {
     namer->addWidget(IP_namer_t);
     namer->addWidget(name_dot_t);
     namer->addWidget(IP_namer_th);
-    namer->addWidget(namer_button);
 
     namerr->addWidget(label_name);
     namerr->addWidget(IP_namers);
+    namerr->addWidget(namer_button);
 
+    IP_namer->setContentsMargins(0, 20, 0, 20);
 
     IP_namer->addWidget(description_name);
     IP_namer->addLayout(namer);
@@ -329,7 +331,7 @@ void StartWidget::settings() {
     change_full->addLayout(IP_namer);
 
 
-
+    scan_all = new QVBoxLayout();
     scans_hard = new QHBoxLayout();
     scans_netw = new QHBoxLayout();
     scans_soft = new QHBoxLayout();
@@ -382,12 +384,17 @@ void StartWidget::settings() {
     scans_netw->addWidget(minutes_t);
     scans_netw->addWidget(scans_net);
 
+
     scanner->setFont(font);
 
-    change_full->addWidget(scanner);
-    change_full->addLayout(scans_hard);
-    change_full->addLayout(scans_netw);
-    change_full->addLayout(scans_soft);
+    scan_all->setContentsMargins(0, 30, 0, 0);
+    scanner->setContentsMargins(0, 15, 0, 0);
+    scan_all->addWidget(scanner);
+    scan_all->addLayout(scans_hard);
+    scan_all->addLayout(scans_netw);
+    scan_all->addLayout(scans_soft);
+
+    change_full->addLayout(scan_all);
 
     ScanNow = new QPushButton();
     ScanNow->setText("Scan Now");
@@ -585,15 +592,15 @@ void StartWidget::login() {
     usern = new QLineEdit();
     passwo = new QLineEdit();
     label = new QLabel(login_widget);
-    label_t = new QLabel(login_widget);
     QVBoxLayout *login_layout = new QVBoxLayout();
+    full_login_layout = new QVBoxLayout();
     QHBoxLayout *User_lay = new QHBoxLayout();
     QHBoxLayout *Pass_lay = new QHBoxLayout();
+    login_butto = new QHBoxLayout();
     QLabel *user_label = new QLabel(login_widget);
     QLabel *pass_label = new QLabel(login_widget);
     login_button = new QPushButton("Login", login_widget);
-    label->setText("Login in with the details you previously used");
-    label_t->setText("If you are new set a user name and password by typing credentials then click login");
+    label->setText("Login in with the details you previously used.\nIf you are new set a user name and password by typing credentials then click login");
     user_label->setText("Username:");
     pass_label->setText("Password:");
 
@@ -611,16 +618,23 @@ void StartWidget::login() {
     Pass_lay->addSpacing(10);
     Pass_lay->addWidget(passwo);
 
+    login_button->setFixedWidth(350);
+
+    login_butto->addWidget(login_button);
+    login_butto->setContentsMargins(225, 10, 225, 0);
+
+    label->setContentsMargins(0, 10, 0, 0);
+    User_lay->setContentsMargins(0, 0, 0, 0);
+    Pass_lay->setContentsMargins(0, 0, 0, 0);
     login_layout->addWidget(label);
-    login_layout->addWidget(label_t);
-    login_layout->addSpacing(10);
     login_layout->addLayout(User_lay);
-    login_layout->addSpacing(10);
     login_layout->addLayout(Pass_lay);
-    login_layout->addSpacing(10);
-    login_layout->addWidget(login_button);
+    login_layout->addLayout(login_butto);
     connect(login_button, SIGNAL(clicked()), this, SLOT(loggerIn()));
-    login_widget->setLayout(login_layout);
+
+    full_login_layout->addLayout(login_layout);
+    full_login_layout->setContentsMargins(11, 10, 11, 480);
+    login_widget->setLayout(full_login_layout);
 
     ifstream ifile, file;
 
@@ -735,7 +749,7 @@ void StartWidget::loggerIn() {
             }
         }
         if(!logged) {
-            label_t->setText("Invalid Credentials try agian");
+            message("Invalid Credentials try agian");
         }
     } else if (!logged && (!pas || !use)){
         ofstream ofile;
