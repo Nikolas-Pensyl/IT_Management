@@ -23,6 +23,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QAction>
+#include <map>
 
 /*
  * This is the number used to indicate a reboot of the program
@@ -62,6 +63,7 @@ protected:
     string exec(string command);
     vector<string> ScanLAN();
     bool validateVal(int IP);
+    string to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d);
 
     //'Computers X' widget items
     vector<QPushButton*> comps;
@@ -80,6 +82,10 @@ protected:
     void CompsbyIP();
     void settings();
 
+    //Method that tracks the IP and its name when first running this program
+    void open_Mapper();
+
+    QFont font;
 
 
     vector<QTabWidget*> IPlist_widget;
@@ -143,6 +149,26 @@ protected:
      QLabel *rem_dot_t;
      QHBoxLayout *removel;
 
+
+     //Give an IP a name
+     QVBoxLayout *IP_namer;
+     QHBoxLayout *namer;
+     QHBoxLayout *namerr;
+     QPushButton *namer_button;
+     QLineEdit *IP_namer_z;
+     QLineEdit *IP_namer_o;
+     QLineEdit *IP_namer_t;
+     QLineEdit *IP_namer_th;
+     QLineEdit *IP_namers;
+     QLabel *name_dot_z;
+     QLabel *name_dot_o;
+     QLabel *name_dot_t;
+     QLabel *label_IP;
+     QLabel *label_name;
+     QLabel *description_name;
+     map<string, string> IP_Name;
+
+
      //this stores the current username and password
      string password;
      string username;
@@ -199,5 +225,6 @@ public slots:
     void reScanHard();
     void reScanSoft();
     void blackList();
+    void reName();
 };
 #endif // STARTWIDGET_H

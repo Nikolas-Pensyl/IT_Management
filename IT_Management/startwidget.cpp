@@ -24,12 +24,14 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     //Set the tabs to the Screen
 
     login();
+    open_Mapper();
     CompsbyIP();
     settings();
     validateIntervalScan();
+
     tab->addTab(login_widget, "login");
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
-    tab->setFixedSize(700, 500);
+    tab->setFixedSize(800, 700);
 
     hard_soft = hardware_scan==software_scan;
     soft_net = software_scan==network_scan;
@@ -40,7 +42,6 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
         if(current_code==EXIT_CODE_REBOOT_NET) {
             if(soft_net) {
                 //Scan Software
-                cout<<"test";
             } else {
                 timerID_soft->setInterval(software_time);
             }
@@ -70,7 +71,6 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
             }
             if(soft_net) {
                 //Scan Network
-                cout<<"test";
             } else {
                 timerID_net->setInterval(network_time);
             }
@@ -216,6 +216,7 @@ void StartWidget::settings() {
     font.setPointSize(10);
     settings_widget->setFont(font);
 
+
     change_log->setFixedHeight(35);
 
     change_u->addWidget(change_use);
@@ -229,7 +230,7 @@ void StartWidget::settings() {
     login_layout->addWidget(change_login);
 
     login_layout->setSpacing(3);
-    login_layout->setContentsMargins(0, 0, 20, 20);
+   // login_layout->setContentsMargins(0, 0, 20, 20);
     change_full->addLayout(login_layout);
 
     description_text = new QVBoxLayout();
@@ -271,12 +272,61 @@ void StartWidget::settings() {
     description->setFont(font);
 
     description_text->setSpacing(3);
-    description_text->setContentsMargins(0, 10, 0, 50);
+    //description_text->setContentsMargins(0, 10, 0, 50);
 
     description_text->addWidget(description);
     description_text->addLayout(removel);
 
     change_full->addLayout(description_text);
+
+
+    IP_namer = new QVBoxLayout();
+    namer = new QHBoxLayout();
+    namerr = new QHBoxLayout();
+    label_IP = new QLabel(settings_widget);
+    label_name = new QLabel(settings_widget);
+    name_dot_z = new QLabel(settings_widget);
+    name_dot_o = new QLabel(settings_widget);
+    name_dot_t = new QLabel(settings_widget);
+    description_name = new QLabel(settings_widget);
+    IP_namer_z = new QLineEdit();
+    IP_namer_o = new QLineEdit();
+    IP_namer_t = new QLineEdit();
+    IP_namer_th = new QLineEdit();
+    IP_namers = new QLineEdit();
+    namer_button = new QPushButton();
+    namer_button->setText("Rename the IP");
+    name_dot_z->setText(".");
+    name_dot_o->setText(".");
+    name_dot_t->setText(".");
+    label_name->setText("Name:      ");
+    label_IP->setText("IP Adress: ");
+    description_name->setText("Enter a valid enter IP Address as well as the name you want the IP correspond to.\nThen click the corresponding button and on next can the corresponding IP button\nwill be renamed if it is not blacklisted and if it is scanned.");
+    IP_namer_z->setValidator(new QIntValidator(0, 255, this));
+    IP_namer_o->setValidator(new QIntValidator(0, 255, this));
+    IP_namer_t->setValidator(new QIntValidator(0, 255, this));
+    IP_namer_th->setValidator(new QIntValidator(0, 255, this));
+
+    connect(namer_button, SIGNAL(clicked()), this, SLOT(reName()));
+    namer->addWidget(label_IP);
+    namer->addWidget(IP_namer_z);
+    namer->addWidget(name_dot_z);
+    namer->addWidget(IP_namer_o);
+    namer->addWidget(name_dot_o);
+    namer->addWidget(IP_namer_t);
+    namer->addWidget(name_dot_t);
+    namer->addWidget(IP_namer_th);
+    namer->addWidget(namer_button);
+
+    namerr->addWidget(label_name);
+    namerr->addWidget(IP_namers);
+
+
+    IP_namer->addWidget(description_name);
+    IP_namer->addLayout(namer);
+    IP_namer->addLayout(namerr);
+
+    change_full->addLayout(IP_namer);
 
 
 
@@ -358,24 +408,72 @@ StartWidget::~StartWidget()
 {
 }
 
-void StartWidget::blackList() {
-    int IP_z = atoi(IP_remover_z->text().toStdString().c_str());
-    int IP_o = atoi(IP_remover_o->text().toStdString().c_str());
-    int IP_t = atoi(IP_remover_t->text().toStdString().c_str());
-    int IP_th = atoi(IP_remover_th->text().toStdString().c_str());
+void StartWidget::reName() {
+    string iper = to_IP(IP_namer_z, IP_namer_o, IP_namer_t, IP_namer_th);
+
+    if(IP_namers->text().toStdString().compare("")!=0) {
+        if(iper.compare("")!=0) {
+                IP_Name[iper] = IP_namers->text().toStdString();
+
+
+
+            ofstream ofile;
+            ofile.open("../IP_Names.txt");
+            for(map<string, string>::iterator IP_NAMES = IP_Name.begin(); IP_NAMES!=IP_Name.end(); IP_NAMES++) {
+                ofile<<IP_NAMES->first<<","<<IP_namers->text().toStdString()<<endl;
+                cout<<IP_NAMES->first;
+            }
+            ofile.close();
+
+            message("IP name successfully added/changed!!");
+
+        }
+    } else {
+        message("No name entered try Again!!");
+    }
+}
+
+string StartWidget::to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d) {
+    string iper = "";
+    int IP_z = atoi(a->text().toStdString().c_str());
+    int IP_o = atoi(b->text().toStdString().c_str());
+    int IP_t = atoi(c->text().toStdString().c_str());
+    int IP_th = atoi(d->text().toStdString().c_str());
     if(validateVal(IP_z) && validateVal(IP_o) && validateVal(IP_t) && validateVal(IP_th)) {
-        string iper = to_string(IP_z) + "." + to_string(IP_o) +"."+ to_string(IP_t) +"."+ to_string(IP_th) + "  ";
-        blackList_IP.push_back(iper);
+        iper = to_string(IP_z) + "." + to_string(IP_o) +"."+ to_string(IP_t) +"."+ to_string(IP_th);
+    } else {
+        message("Invalid IP. Check the address and try agian.");
+    }
+    return iper;
+}
+
+void StartWidget::blackList() {
+    string iper = to_IP(IP_remover_z, IP_remover_o, IP_remover_t, IP_remover_th) + "  ";
+
+    int copy = -1;
+    int i = 0;
+    if(iper.compare("")!=0) {
+        for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++, i++) {
+            if(iper.compare(*IPss)==0) {
+                copy = i;
+            }
+        }
+        if(copy==-1) {
+            blackList_IP.push_back(iper);
+            message("IP successfully added to black List!!");
+        } else {
+            blackList_IP[copy].erase();
+            message("IP successfully removed from black List!!");
+        }
+
         ofstream ofile;
         ofile.open("../blackList.txt");
         for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
             ofile<<*IPss<<endl;
         }
         ofile.close();
-        message("IP successfully added to black List!!");
 
-    } else {
-        message("Invalid IP. Check the address and try agian.");
+
     }
 }
 
@@ -432,8 +530,12 @@ void StartWidget::CompsbyIP() {
             numm ++;
             myHLayouts.push_back(new QHBoxLayout);
         }
-
-        QPushButton  *labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget[tabb]);
+        QPushButton  *labelbed;
+        if(IP_Name.find(lss->substr(2, lss->length()))!=IP_Name.end()) {
+            labelbed = new QPushButton(QString::fromStdString(IP_Name[lss->substr(2, lss->length())]), IPlist_widget[tabb]);
+        } else {
+          labelbed =new QPushButton(QString::fromStdString(*lss), IPlist_widget[tabb]);
+        }
         comps.push_back(labelbed);
         connect(comps[k],SIGNAL(clicked()),signalMapper,SLOT(map()));
         signalMapper->setMapping(comps[k], QString::fromStdString(*lss));
@@ -495,6 +597,12 @@ void StartWidget::login() {
     user_label->setText("Username:");
     pass_label->setText("Password:");
 
+    font = user_label->font();
+    font.setPointSize(15);
+    login_widget->setFont(font);
+    font.setPointSize(10);
+    setFont(font);
+
     User_lay->addWidget(user_label);
     User_lay->addSpacing(10);
     User_lay->addWidget(usern);
@@ -555,8 +663,6 @@ void StartWidget::login() {
         i++;
     }
     ifile.close();
-    cout<<network_time<<" "<<hardware_time<<" "<<software_time<<endl;
-
     remove("../loggedin");
 }
 
@@ -775,9 +881,7 @@ vector<string> StartWidget::ScanLAN() {
                  for(vector<string>::iterator l = blackList_IP.begin(); l!=blackList_IP.end() && !dou; l++) {
                      if(l->substr(0, l->length()).compare(line.substr(2, i))==0) {
                          dou = true;
-                         cout<<"test";
                      }
-                     cout<<*l<< "p"<<endl;
                  }
                  if(!dou) {
                      ls.push_back(line.substr(0, i));
@@ -791,4 +895,26 @@ vector<string> StartWidget::ScanLAN() {
 
       }
     return ls;
+}
+
+void StartWidget::open_Mapper() {
+    ifstream ifile;
+    ifile.open("../IP_Names.txt");
+    string line, ip, name;
+    while(getline(ifile, line)) {
+        int current = 0;
+        for(int i =0; i<line.length(); i++) {
+            if(line.compare(i, 1, ".")==0) {
+                current++;
+           }
+           if(current==3 && line.compare(i, 1, ",")==0) {
+               IP_Name[line.substr(0, i)] = line.substr(i+1);
+               current = 0;
+           }
+
+        }
+    }
+
+    cout<<IP_Name.size()<<endl;
+    ifile.close();
 }
