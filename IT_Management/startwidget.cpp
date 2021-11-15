@@ -216,9 +216,6 @@ void StartWidget::settings() {
     font.setPointSize(10);
     settings_widget->setFont(font);
 
-
-    change_log->setFixedHeight(35);
-
     change_u->addWidget(change_use);
     change_u->addWidget(change_user);
     change_p->addWidget(change_pas);
@@ -229,8 +226,7 @@ void StartWidget::settings() {
     login_layout->addLayout(change_p);
     login_layout->addWidget(change_login);
 
-    login_layout->setSpacing(3);
-    login_layout->setContentsMargins(0, 0, 0, 20);
+    login_layout->setContentsMargins(0, 0, 0, 13);
     change_full->addLayout(login_layout);
 
     description_text = new QVBoxLayout();
@@ -267,13 +263,11 @@ void StartWidget::settings() {
     removel->addWidget(rem_dot_t);
     removel->addWidget(IP_remover_th);
     removel->addWidget(remover_butt);
-    description->setFixedHeight(90);
     description->setContentsMargins(0, 8, 0, 0);
-    removel->setContentsMargins(0, 0, 0, 0);
+    removel->setContentsMargins(0, 8, 0, 0);
     description->setFont(font);
 
-    description_text->setSpacing(3);
-    description_text->setContentsMargins(0, 10, 0, 20);
+    description_text->setContentsMargins(0, 15, 0, 15);
 
     description_text->addWidget(description);
     description_text->addLayout(removel);
@@ -330,6 +324,49 @@ void StartWidget::settings() {
 
     change_full->addLayout(IP_namer);
 
+    //Register
+    IP_register = new QVBoxLayout();
+    regi = new QHBoxLayout();
+    label_reg = new QLabel(settings_widget);
+    reg_dot_z = new QLabel(settings_widget);
+    reg_dot_t = new QLabel(settings_widget);
+    reg_dot_o = new QLabel(settings_widget);
+    description_reg = new QLabel(settings_widget);
+    IP_reg_z = new QLineEdit();
+    IP_reg_o = new QLineEdit();
+    IP_reg_t = new QLineEdit();
+    IP_reg_th = new QLineEdit();
+    IP_reg = new QLineEdit();
+    reg_button = new QPushButton();
+    reg_button->setText("  Register the IP  ");
+    reg_dot_z->setText(".");
+    reg_dot_o->setText(".");
+    reg_dot_t->setText(".");
+    label_reg->setText("IP Adress: ");
+    description_reg->setText("Enter a valid enter IP Address and once the button is clicked the IP will be registered\nmeaning anytime you start up the software you will be notified if a corresponding IP is offline.");
+    IP_reg_z->setValidator(new QIntValidator(0, 255, this));
+    IP_reg_o->setValidator(new QIntValidator(0, 255, this));
+    IP_reg_t->setValidator(new QIntValidator(0, 255, this));
+    IP_reg_th->setValidator(new QIntValidator(0, 255, this));
+
+    connect(reg_button, SIGNAL(clicked()), this, SLOT(registerIP()));
+    regi->addWidget(label_reg);
+    regi->addWidget(IP_reg_z);
+    regi->addWidget(reg_dot_z);
+    regi->addWidget(IP_reg_o);
+    regi->addWidget(reg_dot_o);
+    regi->addWidget(IP_reg_t);
+    regi->addWidget(reg_dot_t);
+    regi->addWidget(IP_reg_th);
+    regi->addWidget(reg_button);
+
+    IP_register->setContentsMargins(0, 20, 0, 20);
+
+    IP_register->addWidget(description_reg);
+    IP_register->addLayout(regi);
+
+    change_full->addLayout(IP_register);
+
 
     scan_all = new QVBoxLayout();
     scans_hard = new QHBoxLayout();
@@ -348,6 +385,7 @@ void StartWidget::settings() {
     minutes_txt = new QLabel(settings_widget);
     minutes_tx = new QLabel(settings_widget);
     minutes_t = new QLabel(settings_widget);
+    scanner->setFixedHeight(15);
     scanner->setText("Set the interval at which each scan occurs");
     scan_had->setText("Scan Hardware Interval");
     scan_net->setText("Scan Network Interval ");
@@ -415,6 +453,65 @@ StartWidget::~StartWidget()
 {
 }
 
+void StartWidget::registerIP() {
+    string iper = to_IP(IP_reg_z, IP_reg_o, IP_reg_t, IP_reg_th);
+
+    if(iper.compare("")!=0) {
+        int s = 0;
+        int i = -1;
+        for(vector<string>::iterator IP_REG = registeredIPs.begin(); IP_REG!=registeredIPs.end(); IP_REG++, s++) {
+            if(iper.compare(*IP_REG)==0) {
+                i = s;
+            }
+
+        }
+        if(i==-1) {
+            bool duo = false;
+            for(int blackIP = 0; blackList_IP.size()>blackIP; blackIP++) {
+            if(blackList_IP[blackIP].compare(iper)==0) {
+                duo = true;
+                QMessageBox msgBox;
+                msgBox.setText(QString::fromStdString(iper + " is in both the registered and black listed list which list would you like it in: "));
+                QAbstractButton* None = msgBox.addButton(tr("None"), QMessageBox::YesRole);
+                QAbstractButton* re = msgBox.addButton(tr("Registered list"), QMessageBox::YesRole);
+                QAbstractButton* bl = msgBox.addButton(tr("Black list"), QMessageBox::YesRole);
+                do {
+                    msgBox.exec();
+                } while (msgBox.clickedButton()!= None && msgBox.clickedButton()!= re && msgBox.clickedButton()!= bl);
+                if(msgBox.clickedButton()==None) {
+                    blackList_IP.erase(blackList_IP.begin()+blackIP);
+                    blackIP--;
+                } else if(msgBox.clickedButton()==re) {
+                    registeredIPs.push_back(iper);
+                    ofstream ofile;
+                    ofile.open("../RegisteredIPs.txt");
+                    for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
+                        ofile<<*IPss<<endl;
+                    }
+                    ofile.close();
+                    message("IP successfully added to registered list!!");
+                }
+            }
+        }
+          if(blackList_IP.size()==0 || !duo) {
+              registeredIPs.push_back(iper);
+              ofstream ofile;
+              ofile.open("../RegisteredIPs.txt");
+              for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
+                  ofile<<*IPss<<endl;
+              }
+              ofile.close();
+              message("IP successfully added to registered list!!");
+          }
+        } else {
+             registeredIPs.erase(registeredIPs.begin()+i);
+            message("IP successfully removed from registered list!!");
+        }
+    } else {
+        message("Invalid IP try agian!!");
+    }
+}
+
 void StartWidget::reName() {
     string iper = to_IP(IP_namer_z, IP_namer_o, IP_namer_t, IP_namer_th);
 
@@ -455,7 +552,7 @@ string StartWidget::to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d
 }
 
 void StartWidget::blackList() {
-    string iper = to_IP(IP_remover_z, IP_remover_o, IP_remover_t, IP_remover_th) + "  ";
+    string iper = to_IP(IP_remover_z, IP_remover_o, IP_remover_t, IP_remover_th);
 
     int copy = -1;
     int i = 0;
@@ -466,21 +563,52 @@ void StartWidget::blackList() {
             }
         }
         if(copy==-1) {
-            blackList_IP.push_back(iper);
-            message("IP successfully added to black List!!");
+
+            bool duo = false;
+            for(int blackIP = 0; registeredIPs.size()>blackIP; blackIP++) {
+                message("test");
+            if(registeredIPs[blackIP].compare(iper)==0) {
+                duo = true;
+                message("test");
+                QMessageBox msgBox;
+                msgBox.setText(QString::fromStdString(iper + " is in both the registered and black listed list which list would you like it in: "));
+                QAbstractButton* None = msgBox.addButton(tr("None"), QMessageBox::YesRole);
+                QAbstractButton* re = msgBox.addButton(tr("Registered list"), QMessageBox::YesRole);
+                QAbstractButton* bl = msgBox.addButton(tr("Black list"), QMessageBox::YesRole);
+                do {
+                    msgBox.exec();
+                } while (msgBox.clickedButton()!= None && msgBox.clickedButton()!= re && msgBox.clickedButton()!= bl);
+                if(msgBox.clickedButton()==None) {
+                    registeredIPs.erase(registeredIPs.begin()+blackIP);
+                    blackIP--;
+                } else if(msgBox.clickedButton()==bl) {
+                    blackList_IP.push_back(iper);
+                    ofstream ofile;
+                    ofile.open("../blackList.txt");
+                    for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
+                        ofile<<*IPss<<endl;
+                    }
+                    ofile.close();
+                    message("IP successfully added to black list!!");
+                }
+            }
+        }
+            if(registeredIPs.size()==0 || !duo) {
+                blackList_IP.push_back(iper);
+                ofstream ofile;
+                ofile.open("../blackList.txt");
+                for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
+                    ofile<<*IPss<<endl;
+                }
+                ofile.close();
+                message("IP successfully added to black list!!");
+            }
         } else {
-            blackList_IP[copy].erase();
+            blackList_IP.erase(blackList_IP.begin()+copy);
             message("IP successfully removed from black List!!");
         }
-
-        ofstream ofile;
-        ofile.open("../blackList.txt");
-        for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
-            ofile<<*IPss<<endl;
-        }
-        ofile.close();
-
-
+    } else {
+        message("Invalid IP try agian!!");
     }
 }
 
@@ -761,6 +889,23 @@ void StartWidget::loggerIn() {
     }
     if(logged) {
         int i =1;
+
+        compare_black_and_regist();
+
+          if(registeredIPs.size()>0) {
+            for(vector<string>::iterator registIP = registeredIPs.begin(); registeredIPs.end()!=registIP; registIP++) {
+                bool pinged = false;
+            for(vector<string>::iterator ls = LAN.begin(); ls!=LAN.end(); ls++) {
+                    if(ls->substr(2).compare(*registIP)==0) {
+                        pinged = true;
+                        break;
+                    }
+                }
+                if(!pinged) {
+                    message(QString::fromStdString(*registIP + " was not found on the network"));
+                }
+            }
+          }
         for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
             string nam = to_string(i);
             QString name = "Computers " + QString::fromStdString(nam);
@@ -867,17 +1012,51 @@ vector<string> StartWidget::ScanLAN() {
    //Gets the black Listed IPs from the txt file
    ifstream ifile;
    ifile.open("../blackList.txt");
-   string line;
+   bool duo = false;
+   string line, tested;
        while(getline(ifile, line)) {
-           blackList_IP.push_back(line);
+           tested = checkIP(line);
+
+           duo = false;
+           if(tested.compare("")!=0) {
+               for(int i = 0; i<blackList_IP.size(); i++) {
+                   if(blackList_IP[i].compare(tested)==0) {
+                       duo = true;
+                       break;
+                   }
+               }
+               if(!duo) {
+                 blackList_IP.push_back(tested);
+               }
+           }
        }
        ifile.close();
+
+    ifstream ifile_reg;
+   ifile_reg.open("../RegisteredIPs.txt");
+        while(getline(ifile_reg, line)) {
+            tested = checkIP(line);
+            if(tested.compare("")!=0) {
+                for(int i = 0; i<registeredIPs.size(); i++) {
+                    if(registeredIPs[i].compare(tested)==0) {
+                        duo = true;
+                        break;
+                    }
+                }
+                if(!duo) {
+                  registeredIPs.push_back(tested);
+                }
+            }
+
+        }
+   ifile_reg.close();
 
    //This parses the output string to only get the IPs of the output
    std::vector<string> ls;
    std::istringstream f(ts);
+   int current = 0;
       while (std::getline(f, line)) {
-          int current = 0;
+          current = 0;
           for(int i =0; i<line.length(); i++) {
               if(line.compare(0, 9, "Interface")==0) {
                   break;
@@ -893,15 +1072,15 @@ vector<string> StartWidget::ScanLAN() {
                     }
                  }
                  for(vector<string>::iterator l = blackList_IP.begin(); l!=blackList_IP.end() && !dou; l++) {
-                     if(l->substr(0, l->length()).compare(line.substr(2, i))==0) {
+                     string test = l->substr(0, l->length()) +"  ";
+                     if(test.compare(line.substr(2, i))==0) {
                          dou = true;
                      }
                  }
                  if(!dou) {
                      ls.push_back(line.substr(0, i));
                      cout << line.substr(0, i) <<endl;
-                 }
-
+                    }
                  current = 0;
              }
 
@@ -909,6 +1088,49 @@ vector<string> StartWidget::ScanLAN() {
 
       }
     return ls;
+}
+
+/*
+ * This method takes in a string and tests
+ * if it is a complete and actual IP address
+ * if it is not then we return ""
+ * otherwise we return the IP address
+ */
+string StartWidget::checkIP(string line) {
+    int current = 0;
+    int count = 0;
+    for(int i = 0; i<line.length(); i++) {
+        if(count>3) {
+            return "";
+        } else {
+            if(line.compare(i, 1, ".")==0 && count>0) {
+                current++;
+                if(atoi(line.substr(i-count, i).c_str())>255) {
+                    return "";
+                }
+                count = 0;
+            } else if(isdigit(line[i])) {
+                count++;
+            } else {
+                return "";
+            }
+
+            if(count==3 && current==3) {
+                if(atoi(line.substr(i-count, i).c_str())>255) {
+
+                    return "";
+                }
+                return line.substr(0, i+1);
+            } else if(current==3 && count>0 && !isdigit(line[i+1])){
+
+                if(atoi(line.substr(i-count, i).c_str())>255) {
+                    return "";
+                }
+                return line.substr(0, i+1);
+            }
+        }
+    }
+
 }
 
 void StartWidget::open_Mapper() {
@@ -931,4 +1153,46 @@ void StartWidget::open_Mapper() {
 
     cout<<IP_Name.size()<<endl;
     ifile.close();
+}
+
+void StartWidget::compare_black_and_regist() {
+    for(int registIP = 0; registeredIPs.size()>registIP; registIP++) {
+        for(int blackIP = 0; blackList_IP.size()>blackIP; blackIP++) {
+        if(blackList_IP[blackIP].compare(registeredIPs[registIP])==0) {
+            QMessageBox msgBox;
+            msgBox.setText(QString::fromStdString(blackList_IP[blackIP] + " is in both the registered and black listed list which list would you like it in: "));
+            QAbstractButton* None = msgBox.addButton(tr("None"), QMessageBox::YesRole);
+            QAbstractButton* re = msgBox.addButton(tr("Registered list"), QMessageBox::YesRole);
+            QAbstractButton* bl = msgBox.addButton(tr("Black list"), QMessageBox::YesRole);
+            do {
+                msgBox.exec();
+            } while (msgBox.clickedButton()!= None && msgBox.clickedButton()!= re && msgBox.clickedButton()!= bl);
+            if(msgBox.clickedButton()==None) {
+                blackList_IP.erase(blackList_IP.begin()+blackIP);
+                registeredIPs.erase(registeredIPs.begin()+registIP);
+                registIP--;
+                blackIP--;
+            } else if(msgBox.clickedButton()==re) {
+                blackList_IP.erase(blackList_IP.begin()+blackIP);
+                blackIP--;
+            } else {
+                registeredIPs.erase(registeredIPs.begin()+registIP);
+                registIP--;
+            }
+        }
+    }
+    }
+    ofstream ofile;
+    ofile.open("../blackList.txt");
+    for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
+        ofile<<*IPss<<endl;
+    }
+    ofile.close();
+
+    ofstream ofle;
+    ofle.open("../RegisteredIPs.txt");
+    for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
+        ofle<<*IPss<<endl;
+    }
+    ofle.close();
 }

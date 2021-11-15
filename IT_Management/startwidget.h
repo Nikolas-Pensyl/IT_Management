@@ -63,6 +63,7 @@ protected:
     string exec(string command);
     vector<string> ScanLAN();
     bool validateVal(int IP);
+    string checkIP(string line);
     string to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d);
 
     //'Computers X' widget items
@@ -93,6 +94,7 @@ protected:
     QTabWidget* login_widget;
     QTabWidget* settings_widget;
     vector<string> LAN;
+    vector<string> registeredIPs;
 
     QLineEdit *usern;
     QLineEdit *passwo;
@@ -170,6 +172,20 @@ protected:
      QLabel *description_name;
      map<string, string> IP_Name;
 
+     //Register an IP
+     QVBoxLayout *IP_register;
+     QHBoxLayout *regi;
+     QPushButton *reg_button;
+     QLineEdit *IP_reg_z;
+     QLineEdit *IP_reg_o;
+     QLineEdit *IP_reg_t;
+     QLineEdit *IP_reg_th;
+     QLineEdit *IP_reg;
+     QLabel *reg_dot_z;
+     QLabel *reg_dot_o;
+     QLabel *reg_dot_t;
+     QLabel *label_reg;
+     QLabel *description_reg;
 
      //this stores the current username and password
      string password;
@@ -179,6 +195,8 @@ protected:
      //for a description of each go to the corresponding .cpp file
      void message(QString str);
      void validateIntervalScan();
+     void compare_black_and_regist();
+
 
      //these variables are where the interval for scans is stored
      int hardware_scan;
@@ -228,5 +246,6 @@ public slots:
     void reScanSoft();
     void blackList();
     void reName();
+    void registerIP();
 };
 #endif // STARTWIDGET_H
