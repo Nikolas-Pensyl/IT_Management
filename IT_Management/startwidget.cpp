@@ -226,7 +226,7 @@ void StartWidget::settings() {
     login_layout->addLayout(change_p);
     login_layout->addWidget(change_login);
 
-    login_layout->setContentsMargins(0, 0, 0, 13);
+    login_layout->setContentsMargins(0, 0, 0, 9);
     change_full->addLayout(login_layout);
 
     description_text = new QVBoxLayout();
@@ -245,6 +245,7 @@ void StartWidget::settings() {
     rem_dot_z->setText(".");
     rem_dot_o->setText(".");
     rem_dot_t->setText(".");
+    description->setFixedHeight(75);
     description->setText("If you leave a space black and press the button it will put a zero when blacklisting.\nEnter a value between 0 and 255 in each box to blacklist an IP address\nEnter the IP Adress you want ignored on the next scan.\nIf an IP was already blacklisted pressing the button with the associated IP entered will readd the IP on next scan.");
     remover_butt->setText("Press to ignore or add entered IP  ");
 
@@ -263,7 +264,7 @@ void StartWidget::settings() {
     removel->addWidget(rem_dot_t);
     removel->addWidget(IP_remover_th);
     removel->addWidget(remover_butt);
-    description->setContentsMargins(0, 8, 0, 0);
+    description->setContentsMargins(0, 0, 0, 8);
     removel->setContentsMargins(0, 8, 0, 0);
     description->setFont(font);
 
