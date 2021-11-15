@@ -111,6 +111,10 @@ void StartWidget::reScan() {
     qApp->exit(EXIT_CODE_REBOOT_NET);
 }
 
+/*
+ * When this method is called it restarts the program
+ * which triggers a reScan
+ * */
 void StartWidget::reScanHard() {
     qDebug() << "Performing reboot1";
     ofstream ofile;
@@ -123,6 +127,10 @@ void StartWidget::reScanHard() {
     qApp->exit(EXIT_CODE_REBOOT_HARD);
 }
 
+/*
+ * When this method is called it restarts the program
+ * which triggers a reScan
+ * */
 void StartWidget::reScanSoft() {
     qDebug() << "Performing reboot2";
     ofstream ofile;
@@ -150,7 +158,6 @@ void StartWidget::changeLogin() {
     ofile.close();
     message("Successfully changed the login information!!");
 }
-
 
 /*
  * This method is a SLOT (which is a method activated on a SIGNAL)
@@ -454,6 +461,15 @@ StartWidget::~StartWidget()
 {
 }
 
+/*
+ * This is the method/SLOT called when the register IP button is clicked
+ * It checks if the IP is valid then it checks to see if it is a duplicate
+ * If it is a duplicate it removes the IP from the list otherwise
+ * the IP is compared to the Blacklist and if it is not on the blacklist
+ * the IP is added otherwise a prompt comes up asking if you want the IP
+ * to belong to the blackList, Registered list or neither as it cannont
+ * be in both. and then it removes it from the corresponding list[s]
+ */
 void StartWidget::registerIP() {
     string iper = to_IP(IP_reg_z, IP_reg_o, IP_reg_t, IP_reg_th);
 
@@ -513,6 +529,14 @@ void StartWidget::registerIP() {
     }
 }
 
+/*
+ * This method/SLOT is called when the change name button is pressed
+ * first it checks if anything is in the name category. If is not it prompts you to
+ * try agian with a valid entry. If it is then it checks for a valid IP if
+ * it is not a valid IP it prompts you to enter a valid entry.
+ * If it is a valid entry then the name is saved to both a mapper in memory and a
+ * text file in storage for use on future start ups.
+ */
 void StartWidget::reName() {
     string iper = to_IP(IP_namer_z, IP_namer_o, IP_namer_t, IP_namer_th);
 
@@ -538,6 +562,12 @@ void StartWidget::reName() {
     }
 }
 
+/*
+ * This method takes four entries which if valid is an integer with
+ * a value greater or equal to 0 and less than 256.
+ * Then if it is Valid it returns the IP as one continuous string
+ * Otherwise it returns ""
+ */
 string StartWidget::to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d) {
     string iper = "";
     int IP_z = atoi(a->text().toStdString().c_str());
@@ -552,6 +582,15 @@ string StartWidget::to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d
     return iper;
 }
 
+/*
+ * This is the method/SLOT called when the blacklist IP button is clicked
+ * It checks if the IP is valid then it checks to see if it is a duplicate
+ * If it is a duplicate it removes the IP from the list otherwise
+ * the IP is compared to the registered list and if it is not on the registered
+ * list, the IP is added otherwise a prompt comes up asking if you want the IP
+ * to belong to the blackList, Registered list or neither as it cannont
+ * be in both. and then it removes it from the corresponding list[s]
+ */
 void StartWidget::blackList() {
     string iper = to_IP(IP_remover_z, IP_remover_o, IP_remover_t, IP_remover_th);
 
@@ -613,6 +652,10 @@ void StartWidget::blackList() {
     }
 }
 
+/*
+ * Checks if a value is greater than or equal to 0 and if it is less than or
+ * equal to 255 and returns the result.
+ */
 bool StartWidget::validateVal(int IP) {
     return IP>=0 && IP<=255;
 }
@@ -854,7 +897,6 @@ void StartWidget::validateIntervalScan() {
 
 }
 
-
 /*
  * This is the method called when 1 of two things occur:
  * 1) if the user presses the login button the
@@ -930,6 +972,10 @@ void StartWidget::loggerIn() {
 
 }
 
+/*
+ * In case of a timeing event this method is called
+ * at which point nothing happens
+ */
 void StartWidget::timerEvent(QTimerEvent *e) {
     Q_UNUSED(e);
 }
@@ -1134,6 +1180,10 @@ string StartWidget::checkIP(string line) {
 
 }
 
+/*
+ * This method writes all the names to the corresponding IP
+ * to a txt file for later use when being reopened
+ */
 void StartWidget::open_Mapper() {
     ifstream ifile;
     ifile.open("../IP_Names.txt");
@@ -1156,6 +1206,14 @@ void StartWidget::open_Mapper() {
     ifile.close();
 }
 
+/*
+ * This method is called on startup and reads the black list and
+ * registered list IPs and compares the two lists.
+ * If a match is found it asks which list should keep the IP
+ * the options are neither registered or blacklist.
+ * and then it rewrites both files as to better preserve the state of the
+ * program.
+ */
 void StartWidget::compare_black_and_regist() {
     for(int registIP = 0; registeredIPs.size()>registIP; registIP++) {
         for(int blackIP = 0; blackList_IP.size()>blackIP; blackIP++) {
