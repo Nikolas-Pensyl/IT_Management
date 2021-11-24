@@ -65,6 +65,7 @@ protected:
     bool validateVal(int IP);
     string checkIP(string line);
     string to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d);
+    void reWriteIPs(vector<string> liste, string file_name);
 
     //'Computers X' widget items
     vector<QPushButton*> comps;

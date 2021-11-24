@@ -498,30 +498,25 @@ void StartWidget::registerIP() {
                 if(msgBox.clickedButton()==None) {
                     blackList_IP.erase(blackList_IP.begin()+blackIP);
                     blackIP--;
+                    reWriteIPs(blackList_IP, "../blackList.txt");
                 } else if(msgBox.clickedButton()==re) {
                     registeredIPs.push_back(iper);
-                    ofstream ofile;
-                    ofile.open("../RegisteredIPs.txt");
-                    for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
-                        ofile<<*IPss<<endl;
-                    }
-                    ofile.close();
-                    message("IP successfully added to registered list!!");
+                    blackList_IP.erase(blackList_IP.begin()+blackIP);
+                    blackIP--;
+                    reWriteIPs(blackList_IP, "../blackList.txt");
+                    reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+                    message("IP successfully added to registered list!!");       
                 }
             }
         }
-          if(blackList_IP.size()==0 || !duo) {
+          if(!duo) {
               registeredIPs.push_back(iper);
-              ofstream ofile;
-              ofile.open("../RegisteredIPs.txt");
-              for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
-                  ofile<<*IPss<<endl;
-              }
-              ofile.close();
+              reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
               message("IP successfully added to registered list!!");
           }
         } else {
              registeredIPs.erase(registeredIPs.begin()+i);
+             reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
             message("IP successfully removed from registered list!!");
         }
     } else {
@@ -582,6 +577,15 @@ string StartWidget::to_IP(QLineEdit *a, QLineEdit *b, QLineEdit *c, QLineEdit *d
     return iper;
 }
 
+void StartWidget::reWriteIPs(vector<string> liste, string file_name) {
+    ofstream ofile;
+    ofile.open(file_name);
+    for(int IPss = 0; liste.size()>IPss; IPss++) {
+        ofile<<liste[IPss]<<endl;
+    }
+    ofile.close();
+}
+
 /*
  * This is the method/SLOT called when the blacklist IP button is clicked
  * It checks if the IP is valid then it checks to see if it is a duplicate
@@ -606,10 +610,8 @@ void StartWidget::blackList() {
 
             bool duo = false;
             for(int blackIP = 0; registeredIPs.size()>blackIP; blackIP++) {
-                message("test");
             if(registeredIPs[blackIP].compare(iper)==0) {
                 duo = true;
-                message("test");
                 QMessageBox msgBox;
                 msgBox.setText(QString::fromStdString(iper + " is in both the registered and black listed list which list would you like it in: "));
                 QAbstractButton* None = msgBox.addButton(tr("None"), QMessageBox::YesRole);
@@ -621,30 +623,25 @@ void StartWidget::blackList() {
                 if(msgBox.clickedButton()==None) {
                     registeredIPs.erase(registeredIPs.begin()+blackIP);
                     blackIP--;
+                    reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
                 } else if(msgBox.clickedButton()==bl) {
                     blackList_IP.push_back(iper);
-                    ofstream ofile;
-                    ofile.open("../blackList.txt");
-                    for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
-                        ofile<<*IPss<<endl;
-                    }
-                    ofile.close();
+                    registeredIPs.erase(registeredIPs.begin()+blackIP);
+                    blackIP--;
+                    reWriteIPs(blackList_IP, "../blackList.txt");
+                    reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
                     message("IP successfully added to black list!!");
                 }
             }
         }
-            if(registeredIPs.size()==0 || !duo) {
+            if(!duo) {
                 blackList_IP.push_back(iper);
-                ofstream ofile;
-                ofile.open("../blackList.txt");
-                for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
-                    ofile<<*IPss<<endl;
-                }
-                ofile.close();
+                reWriteIPs(blackList_IP, "../blackList.txt");
                 message("IP successfully added to black list!!");
             }
         } else {
             blackList_IP.erase(blackList_IP.begin()+copy);
+            reWriteIPs(blackList_IP, "../blackList.txt");
             message("IP successfully removed from black List!!");
         }
     } else {
@@ -1241,17 +1238,6 @@ void StartWidget::compare_black_and_regist() {
         }
     }
     }
-    ofstream ofile;
-    ofile.open("../blackList.txt");
-    for(vector<string>::iterator IPss = blackList_IP.begin(); IPss!=blackList_IP.end(); IPss++) {
-        ofile<<*IPss<<endl;
-    }
-    ofile.close();
-
-    ofstream ofle;
-    ofle.open("../RegisteredIPs.txt");
-    for(vector<string>::iterator IPss = registeredIPs.begin(); IPss!=registeredIPs.end(); IPss++) {
-        ofle<<*IPss<<endl;
-    }
-    ofle.close();
+    reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+    reWriteIPs(blackList_IP, "../blackList.txt");
 }
