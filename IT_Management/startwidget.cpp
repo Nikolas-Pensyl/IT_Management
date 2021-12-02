@@ -85,8 +85,8 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
  * The user won't have the settings changed without changing
  * the actual input fields
  * */
-void StartWidget::textSetting(int tabbe) {
-    if(tab->indexOf(settings_widget)==tabbe) {
+void StartWidget::textSetting(int tabChosen) {
+    if(tab->indexOf(settings_widget)==tabChosen) {
         change_user->setText(QString::fromStdString(username));
         change_pass->setText(QString::fromStdString(password));
         scan_hard->setText(QString::fromStdString(to_string(hardware_scan)));
