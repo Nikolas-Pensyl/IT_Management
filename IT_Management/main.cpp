@@ -1,6 +1,11 @@
 #include "startwidget.h"
 
 #include <QApplication>
+#include <QWidget>
+#include <QMessageBox>
+#include <QInputDialog>
+#include <string>
+
 
 int main(int argc, char *argv[])
 {

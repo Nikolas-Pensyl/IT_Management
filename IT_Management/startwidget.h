@@ -24,6 +24,7 @@
 #include <QMessageBox>
 #include <QAction>
 #include <map>
+#include <QInputDialog>
 
 /*
  * This is the number used to indicate a reboot of the program
@@ -72,7 +73,7 @@ protected:
     vector<QPushButton*> butt_alls; 
     vector<QHBoxLayout*> myHLayouts;
     //commands to be shown in the combo box
-    QStringList commands = {"ping ", "tracert "};
+    QStringList commands = {"ping ", "tracert ", "Transfer File "};
     //Full layout of each 'Computers X' widget
     vector<QVBoxLayout*> total_layout;
 
@@ -227,6 +228,12 @@ protected:
      string txt, passw, user;
      //Whether the user is logged in or not
      bool logged = false;
+
+     QString Popup();
+     QString StringPop();
+     QString StringPop1();
+     QString StringPop2();
+     void SCP(QString IP);
 
 
      /*

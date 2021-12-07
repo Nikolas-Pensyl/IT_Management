@@ -538,9 +538,6 @@ void StartWidget::reName() {
     if(IP_namers->text().toStdString().compare("")!=0) {
         if(iper.compare("")!=0) {
                 IP_Name[iper] = IP_namers->text().toStdString();
-
-
-
             ofstream ofile;
             ofile.open("../IP_Names.txt");
             for(map<string, string>::iterator IP_NAMES = IP_Name.begin(); IP_NAMES!=IP_Name.end(); IP_NAMES++) {
@@ -737,10 +734,14 @@ void StartWidget::CompsbyIP() {
  * **/
 void StartWidget::runAll(QString cmd) {
     string com = comm[tab->currentIndex()]->currentText().toStdString();
+    if(com.compare(commands[2].toStdString())!=0) {
      for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
 
          cout<<exec(com + *lss);
      }
+    } else {
+        message("Invalid command for run all pick a unique IP for this command or pick a differnt command to run for all");
+    }
 }
 
 
@@ -988,7 +989,14 @@ void StartWidget::timerEvent(QTimerEvent *e) {
 void StartWidget::execut(QString cmd) {
     string com = cmd.toStdString();
     string commer =comm[tab->currentIndex()]->currentText().toStdString();
+    //if commer == File Transfer then cory's code
+    //othetrtwise
+
+    if(commer.compare(commands[2].toStdString())==0) {
+        SCP(cmd);
+    } else {
     cout << exec(commer+com);
+    }
 }
 
 /*
@@ -1240,4 +1248,93 @@ void StartWidget::compare_black_and_regist() {
     }
     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
     reWriteIPs(blackList_IP, "../blackList.txt");
+}
+
+
+
+
+
+
+
+
+
+
+QString StartWidget::Popup() {
+    QMessageBox msgBox;
+                msgBox.setText(QString::fromStdString("To what location would you like to send your file?"));
+                QAbstractButton* Desktop = msgBox.addButton(tr("Desktop"), QMessageBox::YesRole);
+                QAbstractButton* Documents = msgBox.addButton(tr("Documents"), QMessageBox::YesRole);
+                QAbstractButton* Downloads = msgBox.addButton(tr("Downloads"), QMessageBox::YesRole);
+                do {
+                    msgBox.exec();
+                } while (msgBox.clickedButton()!= Desktop && msgBox.clickedButton()!= Documents && msgBox.clickedButton()!= Downloads);
+                if(msgBox.clickedButton()==Desktop) {
+                    QString Desktop= "/Desktop";
+                    return Desktop;
+                } else if(msgBox.clickedButton()==Documents) {
+                    QString Documents= "/Documents";
+                    return Documents;
+                } else if(msgBox.clickedButton()==Downloads){
+                    QString Downloads= "/Downloads";
+                    return Downloads;
+                }
+                else{
+                    return NULL;
+                }
+}
+
+QString StartWidget::StringPop() {
+    bool ok;
+    QString location;
+    QString blank = "";
+    QString text = QInputDialog::getText(this, tr("Location"), tr("Please enter the file location of what file you wish to transfer:"), QLineEdit::Normal, blank, &ok);
+
+    location=text;
+    location.toStdString();
+return location;
+}
+
+QString StartWidget::StringPop1() {
+    bool ok;
+    QString TargetUser;
+    QString blank1 ="";
+    QString text1 = QInputDialog::getText(this, tr("Target User"), tr("Please enter the target User you which to transfer to:"), QLineEdit::Normal, blank1, &ok);
+
+    TargetUser=text1;
+    TargetUser.toStdString();
+return TargetUser;
+}
+
+QString StartWidget::StringPop2() {
+    bool ok;
+    QString IP;
+    QString blank1 ="";
+    QString text1 = QInputDialog::getText(this, tr("IP"), tr("Please enter the IP address you which to transfer to:"), QLineEdit::Normal, blank1, &ok);
+
+    IP=text1;
+    IP.toStdString();
+    return IP;
+}
+
+void StartWidget::SCP(QString IP)
+{
+QString TransferFile;
+QString A=StringPop(); //Location
+QString B=StringPop1(); // User
+QString I=IP;//IP
+string ier;
+if(IP.toStdString().substr(0, 1).compare(" ")==0) {
+    for(int i = 1; i<IP.length(); i++) {
+        if(IP.toStdString().substr(i, i+1).compare(" ")!=0) {
+            ier = IP.toStdString().substr(i+1, IP.length());
+            I = QString::fromStdString(ier);
+            break;
+        }
+    }
+}
+QString C=Popup(); //Desktop,Documents,Downloads
+TransferFile="Scp "+A+" "+B+"@"+I+":"+"/Users/"+B+C;
+cout<<TransferFile.toStdString()<<endl;
+cout<<exec(TransferFile.toStdString())<<endl;
+message("Transfer Complete");
 }
