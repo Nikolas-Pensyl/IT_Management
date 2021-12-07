@@ -1,15 +1,13 @@
-#include "startwidget.h"
+#include "widget.h"
 
 #include <QApplication>
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
-    int current_exit_code = 0;
-    do{
     QApplication a(argc, argv);
-    StartWidget w(nullptr,current_exit_code);
+    std::cout<<"test"<<std::endl;
+    Widget w;
     w.show();
-    current_exit_code = a.exec();
-    } while(current_exit_code==EXIT_CODE_REBOOT_NET || current_exit_code==EXIT_CODE_REBOOT_SOFT || current_exit_code==EXIT_CODE_REBOOT_HARD);
-    return current_exit_code;
+    return a.exec();
 }
