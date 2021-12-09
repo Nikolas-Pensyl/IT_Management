@@ -14,7 +14,7 @@ using std::filesystem::current_path;
  * */
 StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     //Create tabs
-
+    seconds = -1;
     tab = new QTabWidget(this);
     IPlist_widget.push_back(new QTabWidget);
     settings_widget = new QTabWidget;
@@ -33,22 +33,30 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
     tab->setFixedSize(800, 700);
 
-    hard_soft = hardware_scan==software_scan;
-    soft_net = software_scan==network_scan;
-    hard_net = hardware_scan==network_scan;
-
+    hard_soft = false;
+    if(timerID_hard->remainingTime()==timerID_soft->remainingTime()) {
+        hard_soft = true;
+    }
+    soft_net = false;
+            if(timerID_net->remainingTime()==timerID_soft->remainingTime()) {
+                soft_net = true;
+            }
+    hard_net = false;
+           if(timerID_hard->remainingTime()==timerID_net->remainingTime()) {
+            hard_net = true;
+        }
     if(logged) {
         emit login_button->clicked();
         if(current_code==EXIT_CODE_REBOOT_NET) {
             if(soft_net) {
                 //Scan Software
-                ScanSoft();
+                //ScanSoft();
             } else {
                 timerID_soft->setInterval(software_time);
             }
             if(hard_net) {
                 //Scan Hardware
-                ScanHard();
+               // ScanHard();
             } else {
                 timerID_hard->setInterval(hardware_time);
             }
@@ -111,8 +119,8 @@ void StartWidget::reScan() {
     ofile.open("../loggedin");
     ofile<<encrypt<<endl;
     ofile<<"0"<<endl;
-    ofile<<timerID_hard->remainingTime()<<endl;
-    ofile<<timerID_soft->remainingTime()<<endl;
+    ofile<<timerID_hard->remainingTime()+6<<endl;
+    ofile<<timerID_soft->remainingTime()-3<<endl;
     ofile.close();
     qApp->exit(EXIT_CODE_REBOOT_NET);
 }
@@ -126,9 +134,10 @@ void StartWidget::reScanHard() {
     ofstream ofile;
     ofile.open("../loggedin");
     ofile<<encrypt<<endl;
-    ofile<<timerID_net->remainingTime()<<endl;
+
+    ofile<<timerID_net->remainingTime()-3<<endl;
     ofile<<"0"<<endl;
-    ofile<<timerID_soft->remainingTime()<<endl;
+    ofile<<timerID_soft->remainingTime()-6<<endl;
     ofile.close();
     qApp->exit(EXIT_CODE_REBOOT_HARD);
 }
@@ -142,8 +151,8 @@ void StartWidget::reScanSoft() {
     ofstream ofile;
     ofile.open("../loggedin");
     ofile<<encrypt<<endl;
-    ofile<<timerID_net->remainingTime()<<endl;
-    ofile<<timerID_hard->remainingTime()<<endl;
+    ofile<<timerID_net->remainingTime()-3<<endl;
+    ofile<<timerID_hard->remainingTime()-6<<endl;
     ofile<<"0"<<endl;
     ofile.close();
     qApp->exit(EXIT_CODE_REBOOT_SOFT);
@@ -680,8 +689,7 @@ void StartWidget::CompsbyIP() {
     for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++, k++) {
 
         if(k%30==0) {
-           ent_button.push_back(new QPushButton);
-           ent_button[tabb]->setText("Use entered IP");
+
             label_ent.push_back(new QLabel);
            label_ent[tabb]->setText("IP Adress: ");
             vector<QLineEdit*> edits;
@@ -703,7 +711,6 @@ void StartWidget::CompsbyIP() {
                 if(i!=0) {
                    dots.push_back(new QLabel);
                   dots[i-1]->setText(".");
-                  dots[i-1]->setContentsMargins(0, 0, 0, 0);
                 }
             }
 
@@ -716,20 +723,22 @@ void StartWidget::CompsbyIP() {
                    IP_ent_Hlay[tabb]->addWidget(IP_entry_dot[tabb][i]);
                 }
             }
-            ent_button[tabb]->setFixedWidth(100);
-            IP_ent_Hlay[tabb]->addWidget(ent_button[tabb]);
 
 
 
+            if(tabb==0) {
+                ent_button.push_back(new QPushButton);
+                ent_button[tabb]->setText("Use entered IP");
+                QSignalMapper* siggMapper = new QSignalMapper (this) ;
+               connect(ent_button[tabb], SIGNAL(clicked()), siggMapper, SLOT(map()));
+               siggMapper->setMapping(ent_button[tabb], QString::fromStdString("Manual"));
+               connect (siggMapper, SIGNAL(mapped(QString)), this, SLOT(filter(QString))) ;
+               ent_button[tabb]->setFixedWidth(100);
+               IP_ent_Hlay[tabb]->addWidget(ent_button[tabb]);
+
+            }
             IP_ent_full_lay[tabb]->addWidget(description_ent[tabb]);
-            IP_ent_Hlay[tabb]->setContentsMargins(0, 0, 0, 0);
-            IP_ent_Hlay[tabb]->setMargin(0);
             IP_ent_full_lay[tabb]->addLayout(IP_ent_Hlay[tabb]);
-            IP_ent_full_lay[tabb]->setContentsMargins(0, 0, 0, 0);
-             QSignalMapper* siggMapper = new QSignalMapper (this) ;
-            connect(ent_button[tabb], SIGNAL(clicked()), siggMapper, SLOT(map()));
-            siggMapper->setMapping(ent_button[tabb], QString::fromStdString("Manual"));
-             connect (siggMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
 
           if(k!=0) {
               total_layout[tabb]->addLayout(myHLayouts[numm]);
@@ -947,8 +956,8 @@ void StartWidget::validateIntervalScan() {
         network_scan = atoi(N.c_str());
 
     } else {
-        hardware_scan = 30;
-        software_scan = 30;
+        hardware_scan = 60;
+        software_scan = 90;
         network_scan = 30;
         remove("../ScanInfo.txt");
         ofstream ofile;
@@ -1023,11 +1032,11 @@ void StartWidget::loggerIn() {
         repaint();
         timerID_hard = new QTimer(this);
         connect(timerID_hard, SIGNAL(timeout()), this, SLOT(reScanHard()));
-        timerID_hard->start(hardware_scan*60*1000);
+        timerID_hard->start(hardware_scan*65*1000);
 
         timerID_soft = new QTimer(this);
-        connect(timerID_soft, SIGNAL(timeout()), this, SLOT(reScan()));
-        timerID_soft->start(software_scan*60*1000);
+        connect(timerID_soft, SIGNAL(timeout()), this, SLOT(reScanSoft()));
+        timerID_soft->start(software_scan*63*1000);
 
         timerID_net = new QTimer(this);
         connect(timerID_net, SIGNAL(timeout()), this, SLOT(reScan()));
@@ -1098,6 +1107,19 @@ void StartWidget::execut(QString cmd) {
         cout << exec(commer+com);
     }
 
+}
+
+/*
+ * Couldn't find what was making the program call this funtion twice
+ * so I created this function to filter the double click out
+ */
+void StartWidget::filter(QString cmd) {
+    clock_t end = clock();
+      if(end-seconds<4 && seconds!=-1) {
+        return;
+      }
+      execut(cmd);
+      seconds = clock();
 }
 
 /*

@@ -26,6 +26,7 @@
 #include <map>
 #include <QInputDialog>
 #include <filesystem>
+#include <chrono>
 
 /*
  * This is the number used to indicate a reboot of the program
@@ -260,6 +261,8 @@ protected:
      void ScanHard();
      void ScanHard(string ip_var);
 
+     clock_t seconds;
+
 
      /*
       * 'slots' are methods that are run based on an action by the user or
@@ -280,5 +283,6 @@ public slots:
     void blackList();
     void reName();
     void registerIP();
+    void filter(QString cmd);
 };
 #endif // STARTWIDGET_H
