@@ -15,6 +15,6 @@ int main(int argc, char *argv[])
     StartWidget w(nullptr,current_exit_code);
     w.show();
     current_exit_code = a.exec();
-    } while(current_exit_code==EXIT_CODE_REBOOT_NET || current_exit_code==EXIT_CODE_REBOOT_SOFT || current_exit_code==EXIT_CODE_REBOOT_HARD);
+    } while(current_exit_code==EXIT_CODE_REBOOT_NET);
     return current_exit_code;
 }

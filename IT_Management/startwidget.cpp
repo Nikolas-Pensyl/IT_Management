@@ -33,62 +33,8 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     connect(tab, SIGNAL(currentChanged(int)), this, SLOT(textSetting(int)));
     tab->setFixedSize(800, 700);
 
-    hard_soft = false;
-    if(timerID_hard->remainingTime()==timerID_soft->remainingTime()) {
-        hard_soft = true;
-    }
-    soft_net = false;
-            if(timerID_net->remainingTime()==timerID_soft->remainingTime()) {
-                soft_net = true;
-            }
-    hard_net = false;
-           if(timerID_hard->remainingTime()==timerID_net->remainingTime()) {
-            hard_net = true;
-        }
     if(logged) {
         emit login_button->clicked();
-        if(current_code==EXIT_CODE_REBOOT_NET) {
-            if(soft_net) {
-                //Scan Software
-                //ScanSoft();
-            } else {
-                timerID_soft->setInterval(software_time);
-            }
-            if(hard_net) {
-                //Scan Hardware
-               // ScanHard();
-            } else {
-                timerID_hard->setInterval(hardware_time);
-            }
-
-        } else if(current_code==EXIT_CODE_REBOOT_HARD) {
-            if(hard_soft) {
-                //Scan Software
-                ScanSoft();
-            } else {
-                timerID_soft->setInterval(software_time);
-            }
-            if(hard_net) {
-                //Scan Network
-                //does it automatically on restart
-            } else {
-                timerID_hard->setInterval(network_time);
-            }
-
-        } else if(current_code==EXIT_CODE_REBOOT_SOFT) {
-            if(hard_soft) {
-                //Scan Hardware
-                ScanHard();
-            } else {
-                timerID_hard->setInterval(hardware_time);
-            }
-            if(soft_net) {
-                //Scan Network
-                //does it automatically on restart
-            } else {
-                timerID_net->setInterval(network_time);
-            }
-        }
     }
 }
 
@@ -103,9 +49,7 @@ void StartWidget::textSetting(int tabChosen) {
     if(tab->indexOf(settings_widget)==tabChosen) {
         change_user->setText(QString::fromStdString(username));
         change_pass->setText(QString::fromStdString(password));
-        scan_hard->setText(QString::fromStdString(to_string(hardware_scan)));
-        scan_soft->setText(QString::fromStdString(to_string(software_scan)));
-        scan_netw->setText(QString::fromStdString(to_string(network_scan)));
+        scan_netw->setText(QString::fromStdString(to_string(network_time)));
     }
 }
 
@@ -119,44 +63,10 @@ void StartWidget::reScan() {
     ofile.open("../loggedin");
     ofile<<encrypt<<endl;
     ofile<<"0"<<endl;
-    ofile<<timerID_hard->remainingTime()+6<<endl;
-    ofile<<timerID_soft->remainingTime()-3<<endl;
     ofile.close();
     qApp->exit(EXIT_CODE_REBOOT_NET);
 }
 
-/*
- * When this method is called it restarts the program
- * which triggers a reScan
- * */
-void StartWidget::reScanHard() {
-    qDebug() << "Performing reboot1";
-    ofstream ofile;
-    ofile.open("../loggedin");
-    ofile<<encrypt<<endl;
-
-    ofile<<timerID_net->remainingTime()-3<<endl;
-    ofile<<"0"<<endl;
-    ofile<<timerID_soft->remainingTime()-6<<endl;
-    ofile.close();
-    qApp->exit(EXIT_CODE_REBOOT_HARD);
-}
-
-/*
- * When this method is called it restarts the program
- * which triggers a reScan
- * */
-void StartWidget::reScanSoft() {
-    qDebug() << "Performing reboot2";
-    ofstream ofile;
-    ofile.open("../loggedin");
-    ofile<<encrypt<<endl;
-    ofile<<timerID_net->remainingTime()-3<<endl;
-    ofile<<timerID_hard->remainingTime()-6<<endl;
-    ofile<<"0"<<endl;
-    ofile.close();
-    qApp->exit(EXIT_CODE_REBOOT_SOFT);
-}
 
 /*
  * This method is the method activated when the change_login button is clicked
@@ -181,20 +91,14 @@ void StartWidget::changeLogin() {
  * and rewrites hong long apart the scans should take place.
 **/
 void StartWidget::changeInterval() {
-    hardware_scan = atoi(scan_hard->text().toStdString().c_str());
-    software_scan = atoi(scan_soft->text().toStdString().c_str());
-    network_scan = atoi(scan_netw->text().toStdString().c_str());
+    network_time = atoi(scan_netw->text().toStdString().c_str());
     remove("../ScanInfo.txt");
     ofstream ofile;
     ofile.open("../ScanInfo.txt");
-    ofile<<"Hardware:" << hardware_scan <<endl;
-    ofile<<"Software:"<<software_scan<<endl;
-    ofile<<"Network:"<<network_scan<<endl;
+    ofile<<"Network:"<<network_time<<endl;
     ofile.close();
     message("Scan Interval changed successfully!!");
-    timerID_hard->setInterval(hardware_scan*60*1000);
-    timerID_soft->setInterval(software_scan*60*1000);
-    timerID_net->setInterval(network_scan*60*1000);
+    timerID_net->setInterval(network_time*60*1000);
 }
 
 /*
@@ -392,53 +296,22 @@ void StartWidget::settings() {
 
 
     scan_all = new QVBoxLayout();
-    scans_hard = new QHBoxLayout();
     scans_netw = new QHBoxLayout();
-    scans_soft = new QHBoxLayout();
-    scan_hard = new QLineEdit();
     scan_netw = new QLineEdit();
-    scan_soft = new QLineEdit();
-    scan_hard->setValidator(new QIntValidator(10, 1000, this));
     scan_netw->setValidator(new QIntValidator(10, 1000, this));
-    scan_soft->setValidator(new QIntValidator(10, 1000, this));
     scanner = new QLabel(settings_widget);
-    scan_had = new QLabel(settings_widget);
-    scan_sot = new QLabel(settings_widget);
     scan_net = new QLabel(settings_widget);
-    minutes_txt = new QLabel(settings_widget);
-    minutes_tx = new QLabel(settings_widget);
     minutes_t = new QLabel(settings_widget);
     scanner->setFixedHeight(15);
     scanner->setText("Set the interval at which each scan occurs");
-    scan_had->setText("Scan Hardware Interval");
     scan_net->setText("Scan Network Interval ");
-    scan_sot->setText("Scan Software Interval");
-    minutes_txt->setText("minutes");
-    minutes_tx->setText("minutes");
     minutes_t->setText("minutes");
 
-    scans_sot = new QPushButton();
-    scans_had = new QPushButton();
     scans_net = new QPushButton();
 
-    scans_had->setText("Set Hardware Scan Interval ");
-    scans_sot->setText("Set Software Scan Interval  ");
     scans_net->setText("Set Network Scan Interval   ");
 
-    connect(scans_sot, SIGNAL(clicked()), this, SLOT(changeInterval()));
-    connect(scans_had, SIGNAL(clicked()), this, SLOT(changeInterval()));
     connect(scans_net, SIGNAL(clicked()), this, SLOT(changeInterval()));
-
-    scans_hard->addWidget(scan_had);
-    scans_hard->addWidget(scan_hard);
-    scans_hard->addWidget(minutes_txt);
-    scans_hard->addWidget(scans_had);
-
-
-    scans_soft->addWidget(scan_sot);
-    scans_soft->addWidget(scan_soft);
-    scans_soft->addWidget(minutes_tx);
-    scans_soft->addWidget(scans_sot);
 
     scans_netw->addWidget(scan_net);
     scans_netw->addWidget(scan_netw);
@@ -451,9 +324,7 @@ void StartWidget::settings() {
     scan_all->setContentsMargins(0, 30, 0, 0);
     scanner->setContentsMargins(0, 15, 0, 0);
     scan_all->addWidget(scanner);
-    scan_all->addLayout(scans_hard);
     scan_all->addLayout(scans_netw);
-    scan_all->addLayout(scans_soft);
 
     change_full->addLayout(scan_all);
 
@@ -914,10 +785,6 @@ void StartWidget::login() {
         }
         if(i==1) {
             network_time = atoi(txt.c_str());
-        } else if (i==2) {
-            hardware_time = atoi(txt.c_str());
-        } else if(i==3) {
-            software_time = atoi(txt.c_str());
         }
         i++;
     }
@@ -935,36 +802,25 @@ void StartWidget::login() {
  * to the default 30 min
  * */
 void StartWidget::validateIntervalScan() {
-    bool had = false, sof = false, net = false;
-    string txt, H, S, N;
+    bool net = false;
+    string txt, N;
     ifstream file("../ScanInfo.txt");
     while(getline(file, txt)) {
         if(txt.find("Network:")!=string::npos) {
             N = txt.substr(8, txt.length());
             net = true;
-        } else if(txt.find("Hardware:")!=string::npos) {
-            H = txt.substr(9, txt.length());
-            had = true;
-        } else if(txt.find("Software:")!=string::npos) {
-            S = txt.substr(9, txt.length());
-            sof = true;
         }
     }
-    if(had && sof && net) {
-        hardware_scan = atoi(H.c_str());
-        software_scan = atoi(S.c_str());
-        network_scan = atoi(N.c_str());
+    if(net) {
+        network_time = atoi(N.c_str());
 
     } else {
-        hardware_scan = 60;
-        software_scan = 90;
-        network_scan = 30;
+
+        network_time = 30;
         remove("../ScanInfo.txt");
         ofstream ofile;
         ofile.open("../ScanInfo.txt");
-        ofile<<"Hardware:" << hardware_scan <<endl;
-        ofile<<"Software:"<<software_scan<<endl;
-        ofile<<"Network:"<<network_scan<<endl;
+        ofile<<"Network:"<<network_time<<endl;
         ofile.close();
     }
 
@@ -1030,17 +886,10 @@ void StartWidget::loggerIn() {
         tab->addTab(settings_widget, "Settings");
         tab->removeTab(0);
         repaint();
-        timerID_hard = new QTimer(this);
-        connect(timerID_hard, SIGNAL(timeout()), this, SLOT(reScanHard()));
-        timerID_hard->start(hardware_scan*65*1000);
-
-        timerID_soft = new QTimer(this);
-        connect(timerID_soft, SIGNAL(timeout()), this, SLOT(reScanSoft()));
-        timerID_soft->start(software_scan*63*1000);
 
         timerID_net = new QTimer(this);
         connect(timerID_net, SIGNAL(timeout()), this, SLOT(reScan()));
-        timerID_net->start(network_scan*60*1000);
+        timerID_net->start(network_time*60*1000);
     }
 
 }

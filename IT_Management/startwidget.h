@@ -33,8 +33,6 @@
  * Which can be seen by any .cpp file that includes this .h file
  * */
 static int const EXIT_CODE_REBOOT_NET = -99;
-static int const EXIT_CODE_REBOOT_SOFT = -98;
-static int const EXIT_CODE_REBOOT_HARD = -97;
 
 
 using namespace std;
@@ -126,21 +124,11 @@ protected:
 
      //scanner on settings
      QVBoxLayout *scan_all;
-     QHBoxLayout *scans_hard;
-     QHBoxLayout *scans_soft;
      QHBoxLayout *scans_netw;
      QLabel *scanner;
-     QLabel *scan_had;
-     QLabel *scan_sot;
      QLabel *scan_net;
-     QLabel *minutes_txt;
-     QLabel *minutes_tx;
      QLabel *minutes_t;
-     QLineEdit *scan_hard;
-     QLineEdit *scan_soft;
      QLineEdit *scan_netw;
-     QPushButton *scans_had;
-     QPushButton *scans_sot;
      QPushButton *scans_net;
 
      //removal 'IP' part of the settings widget
@@ -210,24 +198,10 @@ protected:
      void validateIntervalScan();
      void compare_black_and_regist();
 
-
-     //these variables are where the interval for scans is stored
-     int hardware_scan;
-     int software_scan;
-     int network_scan;
-
-     int hardware_time=-1;
-     int software_time=-1;
      int network_time=-1;
-
-     bool hard_soft;
-     bool hard_net;
-     bool soft_net;
 
      //This variable holds when the QTimerEvent method will be called
      //It is started after the user is logged in.
-     QTimer *timerID_hard;
-     QTimer *timerID_soft;
      QTimer *timerID_net;
 
      //This is the encryption key used for reboots
@@ -278,8 +252,6 @@ public slots:
     void textSetting(int tabbe);
     void changeInterval();
     void reScan();
-    void reScanHard();
-    void reScanSoft();
     void blackList();
     void reName();
     void registerIP();
