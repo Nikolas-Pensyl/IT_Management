@@ -25,6 +25,7 @@
 #include <QAction>
 #include <map>
 #include <QInputDialog>
+#include <filesystem>
 
 /*
  * This is the number used to indicate a reboot of the program
@@ -73,7 +74,7 @@ protected:
     vector<QPushButton*> butt_alls; 
     vector<QHBoxLayout*> myHLayouts;
     //commands to be shown in the combo box
-    QStringList commands = {"ping ", "tracert ", "Transfer File "};
+    QStringList commands = {"ping ", "tracert ", "Transfer File ", "Scan Software ", "Scan Hardware "};
     //Full layout of each 'Computers X' widget
     vector<QVBoxLayout*> total_layout;
 
@@ -189,6 +190,15 @@ protected:
      QLabel *label_reg;
      QLabel *description_reg;
 
+     //manual text entry for an IP
+     vector<QVBoxLayout*> IP_ent_full_lay;
+     vector<QHBoxLayout*> IP_ent_Hlay;
+     vector<QPushButton*> ent_button;
+     vector<vector<QLineEdit *>> IP_entry_vect;
+     vector<vector<QLabel *>> IP_entry_dot;
+     vector<QLabel*> label_ent;
+     vector<QLabel*> description_ent;
+
      //this stores the current username and password
      string password;
      string username;
@@ -233,7 +243,22 @@ protected:
      QString StringPop();
      QString StringPop1();
      QString StringPop2();
-     void SCP(QString IP);
+     void SCP(string IP);
+
+     vector<string> pingAll();
+     bool isSpecialCharacter(char input);
+     string get_ip_from_ipconfig(string full_out);
+     void createAHKSoft(string ip_var);
+     void createAHKHard(string ip_var);
+
+    string get_Text_From_User(QString popup_text);
+    string parsingSpecialCharacters(string in);
+    bool isFirstSSH(string ask);
+
+     void ScanSoft();
+     void ScanSoft(string ip_var);
+     void ScanHard();
+     void ScanHard(string ip_var);
 
 
      /*

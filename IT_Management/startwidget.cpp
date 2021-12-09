@@ -1,6 +1,7 @@
 #include "startwidget.h"
 
 using namespace std;
+using std::filesystem::current_path;
 
 /*
  * This method is the constructor of the 'StartWidget' class
@@ -22,7 +23,6 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
 
 
     //Set the tabs to the Screen
-
     login();
     open_Mapper();
     CompsbyIP();
@@ -42,11 +42,13 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
         if(current_code==EXIT_CODE_REBOOT_NET) {
             if(soft_net) {
                 //Scan Software
+                ScanSoft();
             } else {
                 timerID_soft->setInterval(software_time);
             }
             if(hard_net) {
                 //Scan Hardware
+                ScanHard();
             } else {
                 timerID_hard->setInterval(hardware_time);
             }
@@ -54,11 +56,13 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
         } else if(current_code==EXIT_CODE_REBOOT_HARD) {
             if(hard_soft) {
                 //Scan Software
+                ScanSoft();
             } else {
                 timerID_soft->setInterval(software_time);
             }
             if(hard_net) {
                 //Scan Network
+                //does it automatically on restart
             } else {
                 timerID_hard->setInterval(network_time);
             }
@@ -66,11 +70,13 @@ StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
         } else if(current_code==EXIT_CODE_REBOOT_SOFT) {
             if(hard_soft) {
                 //Scan Hardware
+                ScanHard();
             } else {
                 timerID_hard->setInterval(hardware_time);
             }
             if(soft_net) {
                 //Scan Network
+                //does it automatically on restart
             } else {
                 timerID_net->setInterval(network_time);
             }
@@ -672,9 +678,62 @@ void StartWidget::CompsbyIP() {
      QSignalMapper* signalMapper = new QSignalMapper (this) ;
     int k = 0, tabb = 0, numm = 0;
     for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++, k++) {
+
         if(k%30==0) {
+           ent_button.push_back(new QPushButton);
+           ent_button[tabb]->setText("Use entered IP");
+            label_ent.push_back(new QLabel);
+           label_ent[tabb]->setText("IP Adress: ");
+            vector<QLineEdit*> edits;
+            vector<QLabel*> dots;
+
+            description_ent.push_back(new QLabel);
+            description_ent[tabb]->setFixedHeight(15);
+
+            description_ent[tabb]->setText("Enter the IP of your choice here.");
+
+            IP_ent_full_lay.push_back(new QVBoxLayout);
+            IP_ent_Hlay.push_back(new QHBoxLayout);
+
+            IP_ent_Hlay[tabb]->addWidget(label_ent[tabb]);
+
+            for(int i = 0; i<4; i++) {
+                edits.push_back(new QLineEdit);
+                edits[i]->setValidator(new QIntValidator(0, 255, this));
+                if(i!=0) {
+                   dots.push_back(new QLabel);
+                  dots[i-1]->setText(".");
+                  dots[i-1]->setContentsMargins(0, 0, 0, 0);
+                }
+            }
+
+            IP_entry_vect.push_back(edits);
+            IP_entry_dot.push_back(dots);
+
+            for(int i = 0; i<4; i++) {
+                IP_ent_Hlay[tabb]->addWidget(IP_entry_vect[tabb][i]);
+                if(i!=3) {
+                   IP_ent_Hlay[tabb]->addWidget(IP_entry_dot[tabb][i]);
+                }
+            }
+            ent_button[tabb]->setFixedWidth(100);
+            IP_ent_Hlay[tabb]->addWidget(ent_button[tabb]);
+
+
+
+            IP_ent_full_lay[tabb]->addWidget(description_ent[tabb]);
+            IP_ent_Hlay[tabb]->setContentsMargins(0, 0, 0, 0);
+            IP_ent_Hlay[tabb]->setMargin(0);
+            IP_ent_full_lay[tabb]->addLayout(IP_ent_Hlay[tabb]);
+            IP_ent_full_lay[tabb]->setContentsMargins(0, 0, 0, 0);
+             QSignalMapper* siggMapper = new QSignalMapper (this) ;
+            connect(ent_button[tabb], SIGNAL(clicked()), siggMapper, SLOT(map()));
+            siggMapper->setMapping(ent_button[tabb], QString::fromStdString("Manual"));
+             connect (siggMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
+
           if(k!=0) {
               total_layout[tabb]->addLayout(myHLayouts[numm]);
+              total_layout[tabb]->addLayout(IP_ent_full_lay[tabb]);
               numm ++;
               myHLayouts.push_back(new QHBoxLayout);
              tabb++;
@@ -697,6 +756,8 @@ void StartWidget::CompsbyIP() {
           connect(butt_all, SIGNAL(clicked()), sigMapper, SLOT(map()));
           sigMapper->setMapping(butt_all, comm[tabb]->currentText());
           connect(sigMapper, SIGNAL(mapped(QString)), this, SLOT(runAll(QString)));
+
+
           total_layout[tabb]->addLayout(labs);
         } else if(k%5==0 && k!=0) {
             total_layout[tabb]->addLayout(myHLayouts[numm]);
@@ -718,6 +779,7 @@ void StartWidget::CompsbyIP() {
     }
     connect (signalMapper, SIGNAL(mapped(QString)), this, SLOT(execut(QString))) ;
     total_layout[tabb]->addLayout(myHLayouts[numm]);
+    total_layout[tabb]->addLayout(IP_ent_full_lay[tabb]);
     for(int i = 0; i!=tabb+1; i++) {
             IPlist_widget[i]->setLayout(total_layout[i]);
     }
@@ -734,11 +796,15 @@ void StartWidget::CompsbyIP() {
  * **/
 void StartWidget::runAll(QString cmd) {
     string com = comm[tab->currentIndex()]->currentText().toStdString();
-    if(com.compare(commands[2].toStdString())!=0) {
+    if(com.compare(commands[0].toStdString())==0 || com.compare(commands[1].toStdString())==0) {
      for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
-
-         cout<<exec(com + *lss);
+         string IP = *lss;
+         cout<<exec(com + IP);
      }
+    } else if(com.compare(commands[3].toStdString())==0) {
+           ScanSoft();
+    } else if(com.compare(commands[4].toStdString())!=0) {
+            ScanHard();
     } else {
         message("Invalid command for run all pick a unique IP for this command or pick a differnt command to run for all");
     }
@@ -989,14 +1055,49 @@ void StartWidget::timerEvent(QTimerEvent *e) {
 void StartWidget::execut(QString cmd) {
     string com = cmd.toStdString();
     string commer =comm[tab->currentIndex()]->currentText().toStdString();
+    if(cmd.compare("Manual")==0) {
+        com = to_IP(IP_entry_vect[0][0], IP_entry_vect[0][1], IP_entry_vect[0][2], IP_entry_vect[0][3]);
+    }
     //if commer == File Transfer then cory's code
     //othetrtwise
 
     if(commer.compare(commands[2].toStdString())==0) {
-        SCP(cmd);
+        string IP = com;
+        if(IP.substr(0, 1).compare(" ")==0) {
+            for(int i = 1; i<IP.length(); i++) {
+                if(IP.substr(i, i+1).compare(" ")!=0) {
+                    IP = IP.substr(i+1, IP.length());
+                    break;
+                }
+            }
+        }
+       SCP(IP);
+    } else if(commer.compare(commands[3].toStdString())==0) {
+        string IP = com;
+        if(IP.substr(0, 1).compare(" ")==0) {
+            for(int i = 1; i<IP.length(); i++) {
+                if(IP.substr(i, i+1).compare(" ")!=0) {
+                    IP = IP.substr(i+1, IP.length());
+                    break;
+                }
+            }
+        }
+       ScanSoft(IP);
+    } else if(commer.compare(commands[4].toStdString())==0) {
+        string IP = com;
+        if(IP.substr(0, 1).compare(" ")==0) {
+            for(int i = 1; i<IP.length(); i++) {
+                if(IP.substr(i, i+1).compare(" ")!=0) {
+                    IP = IP.substr(i+1, IP.length());
+                    break;
+                }
+            }
+        }
+       ScanHard(IP);
     } else {
-    cout << exec(commer+com);
+        cout << exec(commer+com);
     }
+
 }
 
 /*
@@ -1182,7 +1283,7 @@ string StartWidget::checkIP(string line) {
             }
         }
     }
-
+    return NULL;
 }
 
 /*
@@ -1250,15 +1351,20 @@ void StartWidget::compare_black_and_regist() {
     reWriteIPs(blackList_IP, "../blackList.txt");
 }
 
+/*
+ * This starts the section can transfer files from this computer
+ * to a computer chosen by either button or manual entry
+ *
+ */
 
 
-
-
-
-
-
-
-
+/*
+ * The popup method creates a popup with three options:
+ * Desktop
+ * Documents
+ * Downloads
+ * This is where a file chosen will be saved on the chosen computer
+ */
 QString StartWidget::Popup() {
     QMessageBox msgBox;
                 msgBox.setText(QString::fromStdString("To what location would you like to send your file?"));
@@ -1283,6 +1389,11 @@ QString StartWidget::Popup() {
                 }
 }
 
+
+/*
+ * The StringPop method asks the user to enter the location of the file
+ * on the current computer to properly transfer it.
+ */
 QString StartWidget::StringPop() {
     bool ok;
     QString location;
@@ -1294,6 +1405,11 @@ QString StartWidget::StringPop() {
 return location;
 }
 
+
+/*
+ * This method asks the user to input the username of
+ * the target computer which is where the file will be saved
+ */
 QString StartWidget::StringPop1() {
     bool ok;
     QString TargetUser;
@@ -1305,6 +1421,13 @@ QString StartWidget::StringPop1() {
 return TargetUser;
 }
 
+
+/*
+ * This method asks the user to input the IP of the computer
+ * they want to transfer the file to.
+ * As of now this method was purely used for testing and debugging and is
+ * not called anywhere within the program
+ */
 QString StartWidget::StringPop2() {
     bool ok;
     QString IP;
@@ -1316,25 +1439,369 @@ QString StartWidget::StringPop2() {
     return IP;
 }
 
-void StartWidget::SCP(QString IP)
+
+/*
+ * This is the main method of the file transfer protocol where it calls all the
+ * StringPop methods and then runs the command which actually transfers the file
+ */
+void StartWidget::SCP(string IP)
 {
 QString TransferFile;
 QString A=StringPop(); //Location
 QString B=StringPop1(); // User
-QString I=IP;//IP
+QString I=QString::fromStdString(IP);//IP
 string ier;
-if(IP.toStdString().substr(0, 1).compare(" ")==0) {
-    for(int i = 1; i<IP.length(); i++) {
-        if(IP.toStdString().substr(i, i+1).compare(" ")!=0) {
-            ier = IP.toStdString().substr(i+1, IP.length());
-            I = QString::fromStdString(ier);
-            break;
-        }
-    }
-}
 QString C=Popup(); //Desktop,Documents,Downloads
 TransferFile="Scp "+A+" "+B+"@"+I+":"+"/Users/"+B+C;
 cout<<TransferFile.toStdString()<<endl;
 cout<<exec(TransferFile.toStdString())<<endl;
 message("Transfer Complete");
 }
+
+/*
+ * This starts the last part of the software this portion
+ * was created and is used to get the hardware and software
+ * specifications of computers found on the network.
+ */
+
+/*
+ * This method runs a command to find the IP of the current computer
+ * for the user to not have to enter it themselves guranteeing a proper IP
+ */
+string StartWidget::get_ip_from_ipconfig(string full_out) {
+    string ip_detected, line;
+    std::vector<string> ls;
+    std::istringstream f(full_out);
+    while(getline(f, line)) {
+        if(line.find("IPv4 Address. . . . . . . . . . . : ")!=string::npos) {
+            ip_detected = line.substr(39, line.length());
+        }
+    }
+    return ip_detected;
+}
+
+/*
+ * Inorder to properly automatically type special characters we need this method
+ * this method takes in a character and checks its ascii value
+ * if it is not a number or in the alphabet then it return true.
+ */
+bool StartWidget::isSpecialCharacter(char input) {
+    // CHECKING FOR ALPHABET
+
+        if ((input >= 65 && input <= 90)
+            || (input >= 97 && input <= 122)) {
+            return false;
+        }
+
+        // CHECKING FOR DIGITS
+        else if (input >= 48 && input <= 57) {
+            return false;
+        }
+
+     return true;
+}
+
+/*
+ * From the list generated of found ips from the ScanLAN method,
+ * this method pings every computer on the network and saves the
+ * ones that returned the ping into a list which is what is returned
+ * from this method.
+ */
+vector<string> StartWidget::pingAll() {
+    vector<string> found_ips;
+    for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
+        string ping_out = exec("ping " + *lss);
+        cout<<ping_out;
+        string line;
+
+        std::vector<string> ls;
+        std::istringstream f(ping_out);
+        while(getline(f, line)) {
+            if(line.find("Reply from "+*lss)!=string::npos) {
+                found_ips.push_back(*lss);
+            }
+        }
+    }
+    return found_ips;
+}
+
+/*
+ * This method takes in a string which is what prompts the user with a
+ * yes or no question and based on the reply returns a true for yes
+ * and a false for no.
+ */
+bool StartWidget::isFirstSSH(string ask) {
+    QMessageBox msgBox;
+                msgBox.setText(QString::fromStdString(ask));
+                QAbstractButton* no = msgBox.addButton(tr("no"), QMessageBox::YesRole);
+                QAbstractButton* yes = msgBox.addButton(tr("yes"), QMessageBox::YesRole);
+                do {
+                    msgBox.exec();
+                } while (msgBox.clickedButton()!= yes && msgBox.clickedButton()!= no);
+                if(msgBox.clickedButton()==no) {
+                    return false;
+                } else if(msgBox.clickedButton()==yes) {
+                    return true;
+                }
+                return NULL;
+}
+
+/*
+ * This method creates an autohotkey program based
+ * on the user input for the
+ * host username
+ * host password
+ * server username
+ * server password
+ * Then after saving the .ahk file it runs the
+ * program scanning the software for the specific IP passed
+ * into ip_var as a string.
+ */
+void StartWidget::createAHKSoft(string ip_var) {
+
+    filesystem::path pathing = filesystem::current_path();
+
+    string host_ip = get_ip_from_ipconfig(exec("ipconfig"));
+    string server_pass, host_user, server_user, host_pass;
+
+    host_user = get_Text_From_User("Type in the username of this computer: ");
+    host_pass = get_Text_From_User("Type in the password for this computer: ");
+
+
+    host_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer this computer"+ ip_var));
+    if(server_user.compare("")==0) return;
+
+    host_pass = get_Text_From_User("Type in the password of this computer.");
+if(host_pass.compare("")==0) return;
+
+    server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
+    if(server_user.compare("")==0) return;
+
+    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    if(server_pass.compare("")==0) return;
+
+    bool first_H_to_S = isFirstSSH("Is this your first time SSHing into the computer with the IP: " + ip_var);
+    bool first_S_to_H = isFirstSSH("Is this your first time from the computer with this IP " + ip_var + "back into this machine");
+
+
+
+    host_user = parsingSpecialCharacters(host_user);
+    host_pass = parsingSpecialCharacters(host_pass);
+
+    server_pass = parsingSpecialCharacters(server_pass);
+    server_user = parsingSpecialCharacters(server_user);
+
+    ofstream ofile;
+    ofile.open("../ahk_test.ahk");
+
+    ofile<<"run cmd.exe\n";
+    ofile<<"Sleep, 1000\n";
+    ofile<<"send, ssh{space}" + server_user+ "@"+ip_var + " \n";
+    ofile<<"send, {Enter}\n";
+    ofile<<"Sleep, 3500\n";
+    if(first_H_to_S) {
+        ofile<<"send, yes\n";
+        ofile<<"send, {Enter}\n";
+        ofile<<"Sleep, 1000\n";
+    }
+    ofile<<"send, ";
+    ofile<<server_pass + "\n";
+    ofile<<"send, {Enter}\n";
+    ofile<<"Sleep, 2000\n";
+    ofile<<"Send, wmic /output:C:\\Users\\InstalledPrograms.txt product get name,version \n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 35000\n";
+
+    ofile<<"Send, scp C:\\Users\\InstalledPrograms.txt " + host_user + "@" + host_ip + ":C:\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 3000\n";
+    if(first_S_to_H) {
+        ofile<<"send, yes\n";
+        ofile<<"send, {Enter}\n";
+        ofile<<"Sleep, 1000\n";
+    }
+    ofile<<"Send, "+host_pass+"\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 10000\n";
+    ofile<<"Send, Exit\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 3000\n";
+    ofile<<"Send, Exit\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 500\n";
+    ofile<<"Run, C:\\InstalledPrograms.txt\n";
+    ofile<<"Gosub sub2\n";
+    ofile<<"sub2: \n";
+    ofile<<"Exit";
+    ofile.close();
+
+    message("do not remove focus from the command prompt while program is running or  program will not execute properly!!");
+    cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
+    message("Program has finished");
+}
+
+/*
+ * This method runs the the list generated from the pingAll() method
+ * and for every IP on the list it calls createAHKSoftware
+ */
+void StartWidget::ScanSoft() {
+    filesystem::path pathing = filesystem::current_path();
+    vector<string> found_ips = pingAll();
+    for(std::vector<string>::iterator lss = found_ips.begin(); lss!=found_ips.end(); lss++) {
+        createAHKSoft(*lss);
+    }
+}
+
+/*
+ * This method takes in a single single IP and calls createAHKSoft for that IP.
+ */
+void StartWidget::ScanSoft(string ip_var) {
+    filesystem::path pathing = filesystem::current_path();
+        createAHKSoft(ip_var);
+
+}
+
+/*
+ * This method gets text from the user based on the
+ * popup_text parameter which is what is telling
+ * the user what to input
+ */
+string StartWidget::get_Text_From_User(QString popup_text) {
+    bool ok;
+    QString text_from_user;
+    QString blank = "";
+    QString text = QInputDialog::getText(this, tr("Location"), popup_text, QLineEdit::Normal, blank, &ok);
+
+    text_from_user=text;
+return text_from_user.toStdString();
+}
+
+/*
+ * This method takes in a string and analyzises for special characters
+ * if a special character then the program adds curely braces on
+ * both sides of the character to prepare that string to be
+ * written into the AHK file.
+ */
+string StartWidget::parsingSpecialCharacters(string in) {
+    string out;
+    for(int i = 0; i<in.length(); i++) {
+        if(!isSpecialCharacter(in[i])) {
+        out += in[i];
+    } else {
+            out += "{" + in.substr(i, 1) + "}\n";
+            if(i+1<in.length()) {
+                out += "\nsend, ";
+            }
+        }
+
+    }
+    return out;
+}
+
+/*
+ * This method runs the the list generated from the pingAll() method
+ * and for every IP on the list it calls createAHKHard
+ */
+void StartWidget::ScanHard() {
+    vector<string> found_ips = pingAll();
+    for(std::vector<string>::iterator lss = found_ips.begin(); lss!=found_ips.end(); lss++) {
+        createAHKHard(*lss);
+    }
+}
+
+/*
+ * This method takes in a single single IP and calls createAHKHard for that IP.
+ */
+void StartWidget::ScanHard(string ip_var) {
+
+        createAHKHard(ip_var);
+
+}
+
+/*
+ * This method creates an autohotkey program based
+ * on the user input for the
+ * host username
+ * host password
+ * server username
+ * server password
+ * Then after saving the .ahk file it runs the
+ * program scanning the hardware for the specific IP passed
+ * into ip_var as a string.
+ */
+void StartWidget::createAHKHard(string ip_var) {
+
+    filesystem::path pathing = filesystem::current_path();
+
+    string host_ip = get_ip_from_ipconfig(exec("ipconfig"));
+    string server_pass, host_user, server_user, host_pass;
+
+    host_user = get_Text_From_User("Type in the username of this computer: ");
+    if(host_user.compare("")==0) return;
+    host_pass = get_Text_From_User("Type in the password for this computer: ");
+if(host_pass.compare("")==0) return;
+    server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
+    if(server_user.compare("")==0) return;
+    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    if(server_pass.compare("")==0) return;
+
+    bool first_H_to_S = isFirstSSH("Is this your first time SSHing into the computer with the IP: " + ip_var);
+    bool first_S_to_H = isFirstSSH("Is this your first time from the computer with this IP " + ip_var + "back into this machine");
+
+
+    host_user = parsingSpecialCharacters(host_user);
+    host_pass = parsingSpecialCharacters(host_pass);
+
+    server_pass = parsingSpecialCharacters(server_pass);
+    server_user = parsingSpecialCharacters(server_user);
+
+    ofstream ofile;
+    ofile.open("../ahk_test.ahk");
+
+    ofile<<"run cmd.exe\n";
+    ofile<<"Sleep, 1000\n";
+    ofile<<"send, ssh{space}" + server_user+ "@"+ip_var + " \n";
+    ofile<<"send, {Enter}\n";
+    ofile<<"Sleep, 3500\n";
+    if(first_H_to_S) {
+        ofile<<"send, yes\n";
+        ofile<<"send, {Enter}\n";
+        ofile<<"Sleep, 1000\n";
+    }
+    ofile<<"send, ";
+    ofile<<server_pass + "\n";
+    ofile<<"send, {Enter}\n";
+    ofile<<"Sleep, 2000\n";
+    ofile<<"Send, systeminfo > C:\\Users\\Hardwareinfo.txt \n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 35000\n";
+
+    ofile<<"Send, scp C:\\Users\\Hardwareinfo.txt " + host_user + "@" + host_ip + ":C:\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 3000\n";
+    if(first_S_to_H) {
+        ofile<<"send, yes\n";
+        ofile<<"send, {Enter}\n";
+        ofile<<"Sleep, 1000\n";
+    }
+    ofile<<"Send, "+host_pass+"\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 10000\n";
+    ofile<<"Send, Exit\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 3000\n";
+    ofile<<"Send, Exit\n";
+    ofile<<"Send, {Enter}\n";
+    ofile<<"Sleep, 500\n";
+    ofile<<"Run, C:\\Hardwareinfo.txt\n";
+    ofile<<"Gosub sub2\n";
+    ofile<<"sub2: \n";
+    ofile<<"Exit";
+    ofile.close();
+
+    message("do not remove focus from the command prompt while program is running or  program will not execute properly!!");
+    cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
+    message("Program has finished");
+}
+
+
