@@ -1435,18 +1435,15 @@ void StartWidget::createAHKSoft(string ip_var) {
     string host_ip = get_ip_from_ipconfig(exec("ipconfig"));
     string server_pass, host_user, server_user, host_pass;
 
-    host_user = get_Text_From_User("Type in the username of this computer: ");
-    host_pass = get_Text_From_User("Type in the password for this computer: ");
 
 
-    host_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer this computer"+ ip_var));
-    if(server_user.compare("")==0) return;
-
+    host_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer this computer"));
+    if(host_user.compare("")==0) return;
     host_pass = get_Text_From_User("Type in the password of this computer.");
 if(host_pass.compare("")==0) return;
-
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
-    if(server_user.compare("")==0) return;
+    if(server_user.compare("")==0) {        return;
+    }
 
     server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
@@ -1602,67 +1599,22 @@ void StartWidget::ScanHard(string ip_var) {
  */
 void StartWidget::createAHKHard(string ip_var) {
 
+
     filesystem::path pathing = filesystem::current_path();
+    string server_pass, server_user;
 
-    string host_ip = get_ip_from_ipconfig(exec("ipconfig"));
-    string server_pass, host_user, server_user, host_pass;
-
-    host_user = get_Text_From_User("Type in the username of this computer: ");
-    if(host_user.compare("")==0) return;
-    host_pass = get_Text_From_User("Type in the password for this computer: ");
-if(host_pass.compare("")==0) return;
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
     if(server_user.compare("")==0) return;
     server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
-    bool first_H_to_S = isFirstSSH("Is this your first time SSHing into the computer with the IP: " + ip_var);
-    bool first_S_to_H = isFirstSSH("Is this your first time from the computer with this IP " + ip_var + "back into this machine");
-
-
-    host_user = parsingSpecialCharacters(host_user);
-    host_pass = parsingSpecialCharacters(host_pass);
-
-    server_pass = parsingSpecialCharacters(server_pass);
-    server_user = parsingSpecialCharacters(server_user);
+    //server_pass = parsingSpecialCharacters(server_pass);
+    //server_user = parsingSpecialCharacters(server_user);
 
     ofstream ofile;
     ofile.open("../ahk_test.ahk");
 
-    ofile<<"run cmd.exe\n";
-    ofile<<"Sleep, 1000\n";
-    ofile<<"send, ssh{space}" + server_user+ "@"+ip_var + " \n";
-    ofile<<"send, {Enter}\n";
-    ofile<<"Sleep, 3500\n";
-    if(first_H_to_S) {
-        ofile<<"send, yes\n";
-        ofile<<"send, {Enter}\n";
-        ofile<<"Sleep, 1000\n";
-    }
-    ofile<<"send, ";
-    ofile<<server_pass + "\n";
-    ofile<<"send, {Enter}\n";
-    ofile<<"Sleep, 2000\n";
-    ofile<<"Send, systeminfo > C:\\Users\\Hardwareinfo.txt \n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 35000\n";
 
-    ofile<<"Send, scp C:\\Users\\Hardwareinfo.txt " + host_user + "@" + host_ip + ":C:\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 3000\n";
-    if(first_S_to_H) {
-        ofile<<"send, yes\n";
-        ofile<<"send, {Enter}\n";
-        ofile<<"Sleep, 1000\n";
-    }
-    ofile<<"Send, "+host_pass+"\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 10000\n";
-    ofile<<"Send, Exit\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 3000\n";
-    ofile<<"Send, Exit\n";
-    ofile<<"Send, {Enter}\n";
     ofile<<"Sleep, 500\n";
     ofile<<"Run, C:\\Hardwareinfo.txt\n";
     ofile<<"Gosub sub2\n";
@@ -1671,6 +1623,7 @@ if(host_pass.compare("")==0) return;
     ofile.close();
 
     message("do not remove focus from the command prompt while program is running or  program will not execute properly!!");
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " systeminfo");
     cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
     message("Program has finished");
 }
