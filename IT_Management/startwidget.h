@@ -27,6 +27,7 @@
 #include <QInputDialog>
 #include <filesystem>
 #include <chrono>
+#include <thread>
 
 /*
  * This is the number used to indicate a reboot of the program
@@ -73,7 +74,7 @@ protected:
     vector<QPushButton*> butt_alls; 
     vector<QHBoxLayout*> myHLayouts;
     //commands to be shown in the combo box
-    QStringList commands = {"ping ", "tracert ", "Transfer File ", "Scan Software ", "Scan Hardware "};
+    QStringList commands = {"ping ", "tracert ", "Transfer File ", "Scan Software ", "Scan Hardware ", "Shutdown "};
     //Full layout of each 'Computers X' widget
     vector<QVBoxLayout*> total_layout;
 
@@ -234,6 +235,7 @@ protected:
      void ScanSoft(string ip_var);
      void ScanHard();
      void ScanHard(string ip_var);
+     void Shutdown(string ip_var);
 
      clock_t seconds;
 

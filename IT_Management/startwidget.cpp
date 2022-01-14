@@ -682,8 +682,8 @@ void StartWidget::runAll(QString cmd) {
          cout<<exec(com + IP);
      }
     } else if(com.compare(commands[3].toStdString())==0) {
-           ScanSoft();
-    } else if(com.compare(commands[4].toStdString())!=0) {
+            ScanSoft();
+    } else if(com.compare(commands[4].toStdString())==0) {
             ScanHard();
     } else {
         message("Invalid command for run all pick a unique IP for this command or pick a differnt command to run for all");
@@ -952,7 +952,18 @@ void StartWidget::execut(QString cmd) {
             }
         }
        ScanHard(IP);
-    } else {
+    } else if(commer.compare(commands[5].toStdString())==0) {
+        string IP = com;
+        if(IP.substr(0, 1).compare(" ")==0) {
+            for(int i = 1; i<IP.length(); i++) {
+                if(IP.substr(i, i+1).compare(" ")!=0) {
+                    IP = IP.substr(i+1, IP.length());
+                    break;
+                }
+            }
+        }
+       Shutdown(IP);
+    }else {
         cout << exec(commer+com);
     }
 
@@ -1478,4 +1489,19 @@ void StartWidget::createAHKHard(string ip_var) {
     cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " hard");
     cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
     message("Scan for " + QString::fromStdString(ip_var) +  " has completed!!");
+}
+
+void StartWidget::Shutdown(string ip_var) {
+
+
+    filesystem::path pathing = filesystem::current_path();
+    string server_pass, server_user;
+
+    server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
+    if(server_user.compare("")==0) return;
+    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    if(server_pass.compare("")==0) return;
+
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " shut");
+    message("Shutdown for " + QString::fromStdString(ip_var) +  " has completed!!");
 }

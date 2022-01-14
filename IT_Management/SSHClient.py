@@ -19,8 +19,10 @@ comm = sys.argv[4]
 
 if(comm == "hard"):
     comm = "systeminfo"
-else:
+elif(comm=="soft"):
     comm = "wmic product get name,version"
+else:
+    comm = "shutdown /s"
 
 stdin, stdout, stderr = client.exec_command(comm)
 
@@ -33,21 +35,21 @@ stdin.write('<?php echo "Hello!"; sleep(2); ?>')
 stdin.channel.shutdown_write()
 
 
+if(comm!="shutdown /s"):
 
+    results = stdout.read().decode("utf8")
 
-results = stdout.read().decode("utf8")
+    # Print output of command. Will wait for command to finish.
+    print(f'STDOUT: {results}')
+    print(f'STDERR: {stderr.read().decode("utf8")}')
 
-# Print output of command. Will wait for command to finish.
-print(f'STDOUT: {results}')
-print(f'STDERR: {stderr.read().decode("utf8")}')
+    # Get return code from command (0 is default for success)
+    print(f'Return code: {stdout.channel.recv_exit_status()}')
 
-# Get return code from command (0 is default for success)
-print(f'Return code: {stdout.channel.recv_exit_status()}')
+    filename = sys.argv[2] + sys.argv[4] +".txt"
 
-filename = sys.argv[2] + sys.argv[4] +".txt"
-
-with open(filename, 'w') as f:
-    f.write(results)
+    with open(filename, 'w') as f:
+        f.write(results)
 
 # Because they are file objects, they need to be closed
 stdin.close()
