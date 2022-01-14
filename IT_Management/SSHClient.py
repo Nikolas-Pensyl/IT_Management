@@ -15,7 +15,14 @@ client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(str(sys.argv[1]), username=str(sys.argv[2]), password=str(sys.argv[3]))
 
 # Run a command (execute PHP interpreter)
-stdin, stdout, stderr = client.exec_command(sys.argv[4])
+comm = sys.argv[4]
+
+if(comm == "hard"):
+    comm = "systeminfo"
+else:
+    comm = "wmic product get name,version"
+
+stdin, stdout, stderr = client.exec_command(comm)
 
 print(type(stdin))  # <class 'paramiko.channel.ChannelStdinFile'>
 print(type(stdout))  # <class 'paramiko.channel.ChannelFile'>
@@ -37,7 +44,9 @@ print(f'STDERR: {stderr.read().decode("utf8")}')
 # Get return code from command (0 is default for success)
 print(f'Return code: {stdout.channel.recv_exit_status()}')
 
-with open('test.txt', 'w') as f:
+filename = sys.argv[2] + sys.argv[4] +".txt"
+
+with open(filename, 'w') as f:
     f.write(results)
 
 # Because they are file objects, they need to be closed

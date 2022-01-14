@@ -391,7 +391,7 @@ void StartWidget::registerIP() {
                     blackIP--;
                     reWriteIPs(blackList_IP, "../blackList.txt");
                     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
-                    message("IP successfully added to registered list!!");       
+                    message("IP successfully added to registered list!!");
                 }
             }
         }
@@ -1329,48 +1329,6 @@ cout<<exec(TransferFile.toStdString())<<endl;
 message("Transfer Complete");
 }
 
-/*
- * This starts the last part of the software this portion
- * was created and is used to get the hardware and software
- * specifications of computers found on the network.
- */
-
-/*
- * This method runs a command to find the IP of the current computer
- * for the user to not have to enter it themselves guranteeing a proper IP
- */
-string StartWidget::get_ip_from_ipconfig(string full_out) {
-    string ip_detected, line;
-    std::vector<string> ls;
-    std::istringstream f(full_out);
-    while(getline(f, line)) {
-        if(line.find("IPv4 Address. . . . . . . . . . . : ")!=string::npos) {
-            ip_detected = line.substr(39, line.length());
-        }
-    }
-    return ip_detected;
-}
-
-/*
- * Inorder to properly automatically type special characters we need this method
- * this method takes in a character and checks its ascii value
- * if it is not a number or in the alphabet then it return true.
- */
-bool StartWidget::isSpecialCharacter(char input) {
-    // CHECKING FOR ALPHABET
-
-        if ((input >= 65 && input <= 90)
-            || (input >= 97 && input <= 122)) {
-            return false;
-        }
-
-        // CHECKING FOR DIGITS
-        else if (input >= 48 && input <= 57) {
-            return false;
-        }
-
-     return true;
-}
 
 /*
  * From the list generated of found ips from the ScanLAN method,
@@ -1380,7 +1338,7 @@ bool StartWidget::isSpecialCharacter(char input) {
  */
 vector<string> StartWidget::pingAll() {
     vector<string> found_ips;
-    for(std::vector<string>::iterator lss = LAN.begin(); lss!=LAN.end(); lss++) {
+    for(std::vector<string>::iterator lss = registeredIPs.begin(); lss!=registeredIPs.end(); lss++) {
         string ping_out = exec("ping " + *lss);
         cout<<ping_out;
         string line;
@@ -1397,27 +1355,6 @@ vector<string> StartWidget::pingAll() {
 }
 
 /*
- * This method takes in a string which is what prompts the user with a
- * yes or no question and based on the reply returns a true for yes
- * and a false for no.
- */
-bool StartWidget::isFirstSSH(string ask) {
-    QMessageBox msgBox;
-                msgBox.setText(QString::fromStdString(ask));
-                QAbstractButton* no = msgBox.addButton(tr("no"), QMessageBox::YesRole);
-                QAbstractButton* yes = msgBox.addButton(tr("yes"), QMessageBox::YesRole);
-                do {
-                    msgBox.exec();
-                } while (msgBox.clickedButton()!= yes && msgBox.clickedButton()!= no);
-                if(msgBox.clickedButton()==no) {
-                    return false;
-                } else if(msgBox.clickedButton()==yes) {
-                    return true;
-                }
-                return NULL;
-}
-
-/*
  * This method creates an autohotkey program based
  * on the user input for the
  * host username
@@ -1429,83 +1366,26 @@ bool StartWidget::isFirstSSH(string ask) {
  * into ip_var as a string.
  */
 void StartWidget::createAHKSoft(string ip_var) {
-
     filesystem::path pathing = filesystem::current_path();
+    string server_pass, server_user;
 
-    string host_ip = get_ip_from_ipconfig(exec("ipconfig"));
-    string server_pass, host_user, server_user, host_pass;
-
-
-
-    host_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer this computer"));
-    if(host_user.compare("")==0) return;
-    host_pass = get_Text_From_User("Type in the password of this computer.");
-if(host_pass.compare("")==0) return;
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
-    if(server_user.compare("")==0) {        return;
-    }
-
+    if(server_user.compare("")==0) return;
     server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
-    bool first_H_to_S = isFirstSSH("Is this your first time SSHing into the computer with the IP: " + ip_var);
-    bool first_S_to_H = isFirstSSH("Is this your first time from the computer with this IP " + ip_var + "back into this machine");
-
-
-
-    host_user = parsingSpecialCharacters(host_user);
-    host_pass = parsingSpecialCharacters(host_pass);
-
-    server_pass = parsingSpecialCharacters(server_pass);
-    server_user = parsingSpecialCharacters(server_user);
-
     ofstream ofile;
     ofile.open("../ahk_test.ahk");
-
-    ofile<<"run cmd.exe\n";
-    ofile<<"Sleep, 1000\n";
-    ofile<<"send, ssh{space}" + server_user+ "@"+ip_var + " \n";
-    ofile<<"send, {Enter}\n";
-    ofile<<"Sleep, 3500\n";
-    if(first_H_to_S) {
-        ofile<<"send, yes\n";
-        ofile<<"send, {Enter}\n";
-        ofile<<"Sleep, 1000\n";
-    }
-    ofile<<"send, ";
-    ofile<<server_pass + "\n";
-    ofile<<"send, {Enter}\n";
-    ofile<<"Sleep, 2000\n";
-    ofile<<"Send, wmic /output:C:\\Users\\InstalledPrograms.txt product get name,version \n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 35000\n";
-
-    ofile<<"Send, scp C:\\Users\\InstalledPrograms.txt " + host_user + "@" + host_ip + ":C:\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 3000\n";
-    if(first_S_to_H) {
-        ofile<<"send, yes\n";
-        ofile<<"send, {Enter}\n";
-        ofile<<"Sleep, 1000\n";
-    }
-    ofile<<"Send, "+host_pass+"\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 10000\n";
-    ofile<<"Send, Exit\n";
-    ofile<<"Send, {Enter}\n";
-    ofile<<"Sleep, 3000\n";
-    ofile<<"Send, Exit\n";
-    ofile<<"Send, {Enter}\n";
     ofile<<"Sleep, 500\n";
-    ofile<<"Run, C:\\InstalledPrograms.txt\n";
+    ofile<<"Run, "+pathing.string() +"\\"+server_user+"soft.txt\n";
     ofile<<"Gosub sub2\n";
     ofile<<"sub2: \n";
     ofile<<"Exit";
     ofile.close();
 
-    message("do not remove focus from the command prompt while program is running or  program will not execute properly!!");
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " soft");
     cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
-    message("Program has finished");
+    message("Scan for " + QString::fromStdString(ip_var) +  " has completed!!");
 }
 
 /*
@@ -1542,28 +1422,6 @@ string StartWidget::get_Text_From_User(QString popup_text) {
 
     text_from_user=text;
 return text_from_user.toStdString();
-}
-
-/*
- * This method takes in a string and analyzises for special characters
- * if a special character then the program adds curely braces on
- * both sides of the character to prepare that string to be
- * written into the AHK file.
- */
-string StartWidget::parsingSpecialCharacters(string in) {
-    string out;
-    for(int i = 0; i<in.length(); i++) {
-        if(!isSpecialCharacter(in[i])) {
-        out += in[i];
-    } else {
-            out += "{" + in.substr(i, 1) + "}\n";
-            if(i+1<in.length()) {
-                out += "\nsend, ";
-            }
-        }
-
-    }
-    return out;
 }
 
 /*
@@ -1608,24 +1466,16 @@ void StartWidget::createAHKHard(string ip_var) {
     server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
-    //server_pass = parsingSpecialCharacters(server_pass);
-    //server_user = parsingSpecialCharacters(server_user);
-
     ofstream ofile;
     ofile.open("../ahk_test.ahk");
-
-
     ofile<<"Sleep, 500\n";
-    ofile<<"Run, C:\\Hardwareinfo.txt\n";
+    ofile<<"Run, "+pathing.string() +"\\" + server_user+"hard.txt\n";
     ofile<<"Gosub sub2\n";
     ofile<<"sub2: \n";
     ofile<<"Exit";
     ofile.close();
 
-    message("do not remove focus from the command prompt while program is running or  program will not execute properly!!");
-    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " systeminfo");
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " hard");
     cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
-    message("Program has finished");
+    message("Scan for " + QString::fromStdString(ip_var) +  " has completed!!");
 }
-
-
