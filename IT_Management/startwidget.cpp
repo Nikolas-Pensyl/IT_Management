@@ -14,6 +14,7 @@ using std::filesystem::current_path;
  * */
 StartWidget::StartWidget(QWidget *parent, int current_code) : QWidget(parent) {
     //Create tabs
+    started_code = current_code;
     seconds = -1;
     tab = new QTabWidget(this);
     IPlist_widget.push_back(new QTabWidget);
@@ -1382,7 +1383,7 @@ void StartWidget::createAHKSoft(string ip_var) {
 
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
     if(server_user.compare("")==0) return;
-    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    server_pass = get_Text_Password_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
     ofstream ofile;
@@ -1435,6 +1436,17 @@ string StartWidget::get_Text_From_User(QString popup_text) {
 return text_from_user.toStdString();
 }
 
+string StartWidget::get_Text_Password_User(QString popup_text) {
+    bool ok;
+    QString text_from_user;
+    QString blank = "";
+    QString text = QInputDialog::getText(this, tr("Location"), popup_text, QLineEdit::Password, blank, &ok);
+
+    text_from_user=text;
+return text_from_user.toStdString();
+}
+
+
 /*
  * This method runs the the list generated from the pingAll() method
  * and for every IP on the list it calls createAHKHard
@@ -1474,7 +1486,7 @@ void StartWidget::createAHKHard(string ip_var) {
 
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
     if(server_user.compare("")==0) return;
-    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    server_pass = get_Text_Password_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
     ofstream ofile;
@@ -1499,7 +1511,7 @@ void StartWidget::Shutdown(string ip_var) {
 
     server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ ip_var));
     if(server_user.compare("")==0) return;
-    server_pass = get_Text_From_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
+    server_pass = get_Text_Password_User(QString::fromStdString("Type in the password of the computer with this IP: "+ ip_var));
     if(server_pass.compare("")==0) return;
 
     cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " shut");

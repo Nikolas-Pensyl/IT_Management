@@ -77,7 +77,7 @@ protected:
     QStringList commands = {"ping ", "tracert ", "Transfer File ", "Scan Software ", "Scan Hardware ", "Shutdown "};
     //Full layout of each 'Computers X' widget
     vector<QVBoxLayout*> total_layout;
-
+    int started_code;
     //The login button for the login tab
     QPushButton *login_button;
 
@@ -228,6 +228,7 @@ protected:
      void createAHKHard(string ip_var);
 
     string get_Text_From_User(QString popup_text);
+    string get_Text_Password_User(QString popup_text);
     string parsingSpecialCharacters(string in);
     bool isFirstSSH(string ask);
 
