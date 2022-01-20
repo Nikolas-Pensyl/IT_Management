@@ -98,6 +98,9 @@ protected:
     QTabWidget* settings_widget;
     vector<string> LAN;
     vector<string> registeredIPs;
+    vector<string> registeredIPs_user;
+    vector<string> registeredIPs_pass;
+
 
     QLineEdit *usern;
     QLineEdit *passwo;
@@ -225,7 +228,9 @@ protected:
      bool isSpecialCharacter(char input);
      string get_ip_from_ipconfig(string full_out);
      void createAHKSoft(string ip_var);
+     void createAHKSoft(string ip_var, string server_user, string server_pass);
      void createAHKHard(string ip_var);
+     void createAHKHard(string ip_var, string server_user, string server_pass);
 
     string get_Text_From_User(QString popup_text);
     string get_Text_Password_User(QString popup_text);

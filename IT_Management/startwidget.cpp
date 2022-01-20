@@ -360,16 +360,22 @@ StartWidget::~StartWidget()
 void StartWidget::registerIP() {
     string iper = to_IP(IP_reg_z, IP_reg_o, IP_reg_t, IP_reg_th);
 
+
     if(iper.compare("")!=0) {
         int s = 0;
         int i = -1;
-        for(vector<string>::iterator IP_REG = registeredIPs.begin(); IP_REG!=registeredIPs.end(); IP_REG++, s++) {
+        for(auto IP_REG = registeredIPs.begin(); IP_REG!=registeredIPs.end(); IP_REG++, s++) {
             if(iper.compare(*IP_REG)==0) {
                 i = s;
             }
 
         }
         if(i==-1) {
+            string server_user, server_pass;
+            server_user = get_Text_From_User(QString::fromStdString("Type in the username of the computer with this IP: "+ iper));
+            if(server_user.compare("")==0) return;
+            server_pass = get_Text_Password_User(QString::fromStdString("Type in the password of the computer with this IP: "+ iper));
+            if(server_pass.compare("")==0) return;
             bool duo = false;
             for(int blackIP = 0; blackList_IP.size()>blackIP; blackIP++) {
             if(blackList_IP[blackIP].compare(iper)==0) {
@@ -388,22 +394,35 @@ void StartWidget::registerIP() {
                     reWriteIPs(blackList_IP, "../blackList.txt");
                 } else if(msgBox.clickedButton()==re) {
                     registeredIPs.push_back(iper);
+                    registeredIPs_user.push_back(server_user);
+                    registeredIPs_pass.push_back(server_pass);
                     blackList_IP.erase(blackList_IP.begin()+blackIP);
                     blackIP--;
                     reWriteIPs(blackList_IP, "../blackList.txt");
                     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+                    reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+                    reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
                     message("IP successfully added to registered list!!");
                 }
             }
         }
           if(!duo) {
+
               registeredIPs.push_back(iper);
+              registeredIPs_user.push_back(server_user);
+              registeredIPs_pass.push_back(server_pass);
               reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+              reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+              reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
               message("IP successfully added to registered list!!");
           }
         } else {
              registeredIPs.erase(registeredIPs.begin()+i);
+             registeredIPs_user.erase(registeredIPs_user.begin()+i);
+             registeredIPs_pass.erase(registeredIPs_pass.begin()+i);
              reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+             reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+             reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
             message("IP successfully removed from registered list!!");
         }
     } else {
@@ -491,7 +510,6 @@ void StartWidget::blackList() {
             }
         }
         if(copy==-1) {
-
             bool duo = false;
             for(int blackIP = 0; registeredIPs.size()>blackIP; blackIP++) {
             if(registeredIPs[blackIP].compare(iper)==0) {
@@ -505,15 +523,25 @@ void StartWidget::blackList() {
                     msgBox.exec();
                 } while (msgBox.clickedButton()!= None && msgBox.clickedButton()!= re && msgBox.clickedButton()!= bl);
                 if(msgBox.clickedButton()==None) {
+
                     registeredIPs.erase(registeredIPs.begin()+blackIP);
-                    blackIP--;
+                    registeredIPs_user.erase(registeredIPs_user.begin()+blackIP);
+                    registeredIPs_pass.erase(registeredIPs_pass.begin()+blackIP);
                     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+                    reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+                    reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
+                    blackIP--;
+                    message("IP successfully removed from registered list!!");
                 } else if(msgBox.clickedButton()==bl) {
                     blackList_IP.push_back(iper);
                     registeredIPs.erase(registeredIPs.begin()+blackIP);
+                    registeredIPs_user.erase(registeredIPs_user.begin()+blackIP);
+                    registeredIPs_pass.erase(registeredIPs_pass.begin()+blackIP);
                     blackIP--;
                     reWriteIPs(blackList_IP, "../blackList.txt");
                     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+                    reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+                    reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
                     message("IP successfully added to black list!!");
                 }
             }
@@ -865,20 +893,7 @@ void StartWidget::loggerIn() {
 
         compare_black_and_regist();
 
-          if(registeredIPs.size()>0) {
-            for(vector<string>::iterator registIP = registeredIPs.begin(); registeredIPs.end()!=registIP; registIP++) {
-                bool pinged = false;
-            for(vector<string>::iterator ls = LAN.begin(); ls!=LAN.end(); ls++) {
-                    if(ls->substr(2).compare(*registIP)==0) {
-                        pinged = true;
-                        break;
-                    }
-                }
-                if(!pinged) {
-                    message(QString::fromStdString(*registIP + " was not found on the network"));
-                }
-            }
-          }
+
         for(vector<QTabWidget*>::iterator tabber = IPlist_widget.begin(); tabber != IPlist_widget.end(); tabber++, i++) {
             string nam = to_string(i);
             QString name = "Computers " + QString::fromStdString(nam);
@@ -891,6 +906,26 @@ void StartWidget::loggerIn() {
         timerID_net = new QTimer(this);
         connect(timerID_net, SIGNAL(timeout()), this, SLOT(reScan()));
         timerID_net->start(network_time*60*1000);
+
+        if(started_code==EXIT_CODE_REBOOT_NET) {
+            ScanHard();
+            ScanSoft();
+            message("All auto scanning has completed");
+        }
+    }
+    if(registeredIPs.size()>0) {
+      for(vector<string>::iterator registIP = registeredIPs.begin(); registeredIPs.end()!=registIP; registIP++) {
+          bool pinged = false;
+      for(vector<string>::iterator ls = LAN.begin(); ls!=LAN.end(); ls++) {
+              if(ls->substr(2).compare(*registIP)==0) {
+                  pinged = true;
+                  break;
+              }
+          }
+          if(!pinged) {
+              message(QString::fromStdString(*registIP + " was not found on the network"));
+          }
+      }
     }
 
 }
@@ -1049,7 +1084,7 @@ vector<string> StartWidget::ScanLAN() {
    ifstream ifile;
    ifile.open("../blackList.txt");
    bool duo = false;
-   string line, tested;
+   string line, tested, user_n, pass_n;
        while(getline(ifile, line)) {
            tested = checkIP(line);
 
@@ -1068,8 +1103,10 @@ vector<string> StartWidget::ScanLAN() {
        }
        ifile.close();
 
-    ifstream ifile_reg;
+    ifstream ifile_reg, ifile_user, ifile_pass;
    ifile_reg.open("../RegisteredIPs.txt");
+   ifile_pass.open("../RegisteredIPs_pass.txt");
+   ifile_user.open("../RegisteredIPs_user.txt");
         while(getline(ifile_reg, line)) {
             tested = checkIP(line);
             if(tested.compare("")!=0) {
@@ -1080,12 +1117,18 @@ vector<string> StartWidget::ScanLAN() {
                     }
                 }
                 if(!duo) {
+                  getline(ifile_user, user_n);
+                  getline(ifile_pass, pass_n);
                   registeredIPs.push_back(tested);
+                  registeredIPs_user.push_back(user_n);
+                  registeredIPs_pass.push_back(pass_n);
                 }
             }
 
         }
    ifile_reg.close();
+   ifile_user.close();
+   ifile_pass.close();
 
    //This parses the output string to only get the IPs of the output
    std::vector<string> ls;
@@ -1217,6 +1260,8 @@ void StartWidget::compare_black_and_regist() {
             } while (msgBox.clickedButton()!= None && msgBox.clickedButton()!= re && msgBox.clickedButton()!= bl);
             if(msgBox.clickedButton()==None) {
                 blackList_IP.erase(blackList_IP.begin()+blackIP);
+                registeredIPs_user.erase(registeredIPs.begin()+registIP);
+                registeredIPs_pass.erase(registeredIPs.begin()+registIP);
                 registeredIPs.erase(registeredIPs.begin()+registIP);
                 registIP--;
                 blackIP--;
@@ -1224,6 +1269,8 @@ void StartWidget::compare_black_and_regist() {
                 blackList_IP.erase(blackList_IP.begin()+blackIP);
                 blackIP--;
             } else {
+                registeredIPs_user.erase(registeredIPs.begin()+registIP);
+                registeredIPs_pass.erase(registeredIPs.begin()+registIP);
                 registeredIPs.erase(registeredIPs.begin()+registIP);
                 registIP--;
             }
@@ -1231,6 +1278,8 @@ void StartWidget::compare_black_and_regist() {
     }
     }
     reWriteIPs(registeredIPs, "../RegisteredIPs.txt");
+    reWriteIPs(registeredIPs_user, "../RegisteredIPs_user.txt");
+    reWriteIPs(registeredIPs_pass, "../RegisteredIPs_pass.txt");
     reWriteIPs(blackList_IP, "../blackList.txt");
 }
 
@@ -1400,15 +1449,31 @@ void StartWidget::createAHKSoft(string ip_var) {
     message("Scan for " + QString::fromStdString(ip_var) +  " has completed!!");
 }
 
+void StartWidget::createAHKSoft(string ip_var, string server_user, string server_pass) {
+    filesystem::path pathing = filesystem::current_path();
+    ofstream ofile;
+    ofile.open("../ahk_test.ahk");
+    ofile<<"Sleep, 500\n";
+    ofile<<"Run, "+pathing.string() +"\\"+server_user+"soft.txt\n";
+    ofile<<"Gosub sub2\n";
+    ofile<<"sub2: \n";
+    ofile<<"Exit";
+    ofile.close();
+
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " soft");
+    cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
+}
+
 /*
  * This method runs the the list generated from the pingAll() method
  * and for every IP on the list it calls createAHKSoftware
  */
 void StartWidget::ScanSoft() {
-    filesystem::path pathing = filesystem::current_path();
-    vector<string> found_ips = pingAll();
-    for(std::vector<string>::iterator lss = found_ips.begin(); lss!=found_ips.end(); lss++) {
-        createAHKSoft(*lss);
+    int i = 0;
+    auto ls_user = registeredIPs_user.begin();
+    auto ls_pass = registeredIPs_pass.begin();
+    for(std::vector<string>::iterator lss = registeredIPs.begin(); lss!=registeredIPs.end(); lss++, i++) {
+        createAHKSoft(*lss, *(ls_user+i), *(ls_pass+i));
     }
 }
 
@@ -1452,9 +1517,11 @@ return text_from_user.toStdString();
  * and for every IP on the list it calls createAHKHard
  */
 void StartWidget::ScanHard() {
-    vector<string> found_ips = pingAll();
-    for(std::vector<string>::iterator lss = found_ips.begin(); lss!=found_ips.end(); lss++) {
-        createAHKHard(*lss);
+    int i = 0;
+    auto ls_user = registeredIPs_user.begin();
+    auto ls_pass = registeredIPs_pass.begin();
+    for(auto lss = registeredIPs.begin(); lss!=registeredIPs.end(); lss++, i++) {
+        createAHKHard(*lss, *(ls_user+i), *(ls_pass+i));
     }
 }
 
@@ -1501,6 +1568,23 @@ void StartWidget::createAHKHard(string ip_var) {
     cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " hard");
     cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
     message("Scan for " + QString::fromStdString(ip_var) +  " has completed!!");
+}
+
+void StartWidget::createAHKHard(string ip_var, string server_user, string server_pass) {
+
+
+    filesystem::path pathing = filesystem::current_path();
+    ofstream ofile;
+    ofile.open("../ahk_test.ahk");
+    ofile<<"Sleep, 500\n";
+    ofile<<"Run, "+pathing.string() +"\\" + server_user+"hard.txt\n";
+    ofile<<"Gosub sub2\n";
+    ofile<<"sub2: \n";
+    ofile<<"Exit";
+    ofile.close();
+
+    cout<<exec("python SSHClient.py " + ip_var + " " + server_user + " " + server_pass + " hard");
+    cout<<exec(" cd " + pathing.string() + "&& cd .. && ahk_test.ahk");
 }
 
 void StartWidget::Shutdown(string ip_var) {
