@@ -828,7 +828,7 @@ void StartWidget::login() {
  * if the file is not properly located or
  * parts of the file are missing
  * the program will reset the interval scan
- * to the default 30 min
+ * to the default 120 min
  * */
 void StartWidget::validateIntervalScan() {
     bool net = false;
@@ -845,7 +845,7 @@ void StartWidget::validateIntervalScan() {
 
     } else {
 
-        network_time = 30;
+        network_time = 120;
         remove("../ScanInfo.txt");
         ofstream ofile;
         ofile.open("../ScanInfo.txt");
